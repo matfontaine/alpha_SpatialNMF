@@ -1,0 +1,965 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+\begin_inset Formula $\alpha$
+\end_inset
+
+-MNMF with a Spatial Measure Representation
+\end_layout
+
+\begin_layout Section
+The model
+\end_layout
+
+\begin_layout Standard
+Let assume 
+\begin_inset Formula $N,F,T,M$
+\end_inset
+
+ be the number of sources, frequency bins, time frame and microphones respective
+ly.
+ The sources are admiting the following probablistic model:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\boldsymbol{x}_{nft}\sim\mathcal{S}\alpha S_{\mathbb{C}}\left(\mathfrak{C}_{nft}\right)
+\]
+
+\end_inset
+
+with (the next result is true because of the Radon-Nikodym-Lebesgue theorem
+ applied on a positive measure):
+\begin_inset Formula 
+\[
+\mathfrak{C}_{nft}\left(d\boldsymbol{\theta}\right)\triangleq\lambda_{nft}\Gamma_{nf}\left(d\boldsymbol{\theta}\right)\triangleq\sum_{k}w_{nfk}h_{nkt}\Gamma_{nf}\left(d\boldsymbol{\theta}\right)
+\]
+
+\end_inset
+
+and where 
+\begin_inset Formula $d\boldsymbol{\theta}$
+\end_inset
+
+ is a small portion of the hypersphere 
+\begin_inset Formula $\mathcal{S}_{\mathbb{C}}^{M}$
+\end_inset
+
+.
+ Then we have
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\boldsymbol{x}_{nft}\sim\mathcal{S}\alpha S_{\mathbb{C}}\left(\lambda_{nft}\boldsymbol{\Gamma}_{nf}\right)
+\]
+
+\end_inset
+
+and:
+\begin_inset Formula 
+\[
+\boldsymbol{x}_{ft}\triangleq\sum_{n=1}^{N}\boldsymbol{x}_{nft}\sim\mathcal{S}\alpha S_{\mathbb{C}}\left(\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Gamma}_{nf}\right)
+\]
+
+\end_inset
+
+In order to estimate 
+\begin_inset Formula $\lambda_{nft}$
+\end_inset
+
+ and 
+\begin_inset Formula $\Gamma_{nf}$
+\end_inset
+
+, we use an EM approach.
+ 
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Let's define 
+\begin_inset Formula $\boldsymbol{\Theta}\triangleq\left\{ \lambda_{nft}\Gamma_{nf}\right\} =\left\{ \boldsymbol{\Lambda},\boldsymbol{\Gamma}\right\} $
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+EM algorithm
+\end_layout
+
+\begin_layout Standard
+Let's introduce some notations:
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $P$
+\end_inset
+
+: number of sphere sampling
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\boldsymbol{\theta}_{f1},\dots,\boldsymbol{\theta}_{fP}:$
+\end_inset
+
+ sphere sampling
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\tilde{\mathbf{x}}_{ft}\in\mathbb{R}_{+}^{P}$
+\end_inset
+
+: The Levy exponent where 
+\begin_inset Formula $\tilde{\mathbf{x}}_{ft}=\left[\tilde{x}_{ft1},\dots,\tilde{x}_{ftP}\right]^{\top}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Theoretically, we have the following equality:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\tilde{\mathbf{x}}_{ft}\left(\boldsymbol{\mathbf{\theta}}\right)=\sum_{n}\int_{\boldsymbol{\mathbf{\theta}^{\prime}}_{f}}\left|\left\langle \boldsymbol{\theta}_{f},\mathbf{\boldsymbol{\theta}}_{f}^{\prime}\right\rangle \right|^{\alpha}\lambda_{nft}\boldsymbol{\Gamma}_{nf}\left(d\boldsymbol{\mathbf{\theta}}_{f}^{\prime}\right)
+\]
+
+\end_inset
+
+An estimation of 
+\begin_inset Formula $\tilde{\mathbf{x}}_{f\left[t-\Delta t,t+\Delta t\right]}$
+\end_inset
+
+ (
+\series bold
+Levy exponent estimator
+\series default
+ along the interval 
+\begin_inset Formula $\left[t-\Delta t,t+\Delta t\right]$
+\end_inset
+
+) is given as follow:
+\begin_inset Formula 
+\[
+\forall\boldsymbol{\theta}_{p}\in\mathbb{C}^{K},\:\tilde{\boldsymbol{x}}_{f\left[t-\Delta t,t+\Delta t\right]}\left(\boldsymbol{\theta}_{p}\right)\triangleq\tilde{x}_{ftp}\simeq-2\log\left|\frac{1}{2\Delta_{t}}\sum_{t\in\left[t^{\prime}-\Delta t,t^{\prime}+\Delta t\right]}\exp\left(i\frac{\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft^{\prime}}\right]}{2^{1/\alpha}}\right)\right|
+\]
+
+\end_inset
+
+The estimator will be considered by doing a moving average along the time
+ axis.
+\end_layout
+
+\begin_layout Subsection
+M-Step
+\end_layout
+
+\begin_layout Standard
+It can be shown that it exists the following relation:
+\begin_inset Formula 
+\[
+\tilde{\boldsymbol{x}}_{ft}\simeq\boldsymbol{\Psi}_{f}\sum_{n}\lambda_{nft}\hat{\boldsymbol{\Gamma}}_{nf}
+\]
+
+\end_inset
+
+where for the entry 
+\begin_inset Formula $p,p^{\prime}$
+\end_inset
+
+ of the matrix 
+\begin_inset Formula $\boldsymbol{\Psi}$
+\end_inset
+
+ we set
+\begin_inset Formula 
+\[
+\left[\boldsymbol{\Psi}_{f}\right]_{p,p^{\prime}}\triangleq\left|\left\langle \boldsymbol{\theta}_{fp},\boldsymbol{\theta}_{fp^{\prime}}\right\rangle \right|^{\alpha}
+\]
+
+\end_inset
+
+We consider the 
+\begin_inset Formula $\beta$
+\end_inset
+
+-divergence as a cost function ( for 
+\begin_inset Formula $\beta\leq1$
+\end_inset
+
+):
+\size scriptsize
+
+\begin_inset Formula 
+\begin{align*}
+ & d_{\beta}\left(\tilde{\boldsymbol{x}}_{ft}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right)\\
+ & =\sum_{f,t,p}\frac{1}{\beta\left(\beta-1\right)}\left(\left\{ \tilde{\boldsymbol{x}}_{ft}\right\} _{p}^{\beta}+\left(\beta-1\right)\left[\sum_{n,k=1}^{N,K}w_{nfk}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{\beta}-\beta\left\{ \tilde{\boldsymbol{x}}_{ft}\right\} _{p}\left[\sum_{n,k=1}^{N,K}w_{nfk}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{\beta-1}\right)\\
+ & \leq\sum_{f,t,p}\left(\text{\beta\left(\beta-1\right)}\tilde{x}_{ftp}^{\beta}+\pi_{ftp}^{\beta-1}\left(\sum_{n,k=1}^{N,K}w_{nfk}h_{nkt}\tilde{g}_{nfp}-\pi_{ftp}\right)+\frac{\pi_{ftp}^{\beta}}{\beta}-\frac{1}{\beta-1}\tilde{x}_{ftp}\sum_{n,k=1}^{N,K}\omega_{ftnkp}\left(\frac{w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\tilde{g}_{nfp}^{\beta-1}}{\omega_{ftnkp}^{\beta-1}}\right)\right)\\
+ & \leq\sum_{f,t,p}\left(\text{\beta\left(\beta-1\right)}\tilde{x}_{ftp}^{\beta}+\pi_{ftp}^{\beta-1}\left(\sum_{n,k,p^{\prime}=1}^{N,K,P}w_{nfk}h_{nkt}\psi_{fpp^{\prime}}\gamma_{nfp^{\prime}}-\pi_{ftp}\right)+\frac{\pi_{ftp}^{\beta}}{\beta}-\frac{1}{\beta-1}\tilde{x}_{ftp}\sum_{n,k,p^{\prime}=1}^{N,K,P}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}\right)\\
+ & \triangleq\mathcal{L}_{+}\left(\tilde{\boldsymbol{x}}_{f}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf},\boldsymbol{\Pi},\mathbf{\Omega},\mathbf{\rho}\right)
+\end{align*}
+
+\end_inset
+
+
+\size default
+with 
+\begin_inset Formula $y_{ftp}=\sum_{n,k}w_{nkf}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}$
+\end_inset
+
+ and 
+\begin_inset Formula $\tilde{g}_{nfp}=\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}=\sum_{p^{\prime}}\psi_{fpp^{\prime}}\gamma_{nfp^{\prime}}$
+\end_inset
+
+.
+ The equalities hold when
+\begin_inset Formula 
+\begin{align*}
+\omega_{ftnkp} & =w_{nkf}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\left[\sum_{n,k}w_{nkf}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{-1}\triangleq w_{nkf}h_{nkt}\tilde{g}_{nfp}y_{ftp}^{-1}\\
+\pi_{ftp} & =y_{ftp},\rho_{nfpp^{\prime}}=\psi_{fpp^{\prime}}\gamma_{nfp^{\prime}}\tilde{g}_{nfp}^{-1}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\begin{align}
+d_{\beta}\left(\hat{\boldsymbol{I}}_{nf}\mid v_{nft}\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right) & =\sum_{f,t,p}\frac{1}{\beta\left(\beta-1\right)}\left(\hat{\boldsymbol{I}}_{nf}^{\beta}+\left(\beta-1\right)\left(\sum_{k}w_{nfk}h_{nkt}\right)^{\beta}\left[\left\{ \boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{\beta}-\beta\left(\sum_{k}w_{nfk}h_{nkt}\right)^{\beta-1}\hat{\boldsymbol{I}}_{nf}.\left[\left\{ \boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{\beta-1}\right)\nonumber \\
+ & \leq\sum_{f,t,p}\frac{1}{\beta\left(\beta-1\right)}\left(\hat{\boldsymbol{I}}_{nf}^{\beta}+\left(\beta-1\right)\sum_{k}\gamma_{ftnk}^{1-\beta}w_{nfk}^{\beta}h_{nkt}^{\beta}\left[\left\{ \boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{\beta}-\beta\sum_{k}\gamma_{ftnk}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\hat{\boldsymbol{I}}_{nf}.\left[\left\{ \boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{\beta-1}\right)\nonumber \\
+ & \triangleq\mathcal{L}_{+}\left(\hat{\boldsymbol{I}}_{nf}\lambda_{nft}\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf},\gamma\right)\label{eq:beta-div}
+\end{align}
+
+\end_inset
+
+with 
+\begin_inset Formula $\gamma_{ftnk}=w_{nkf}h_{nkt}\left[\sum_{k}w_{nkf}h_{nkt}\right]^{-1}$
+\end_inset
+
+ for the equality.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Estimation of 
+\begin_inset Formula $\Gamma_{nf}$
+\end_inset
+
+
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+We assume that we know the 
+\begin_inset Formula $\lambda_{nft}$
+\end_inset
+
+.
+ We can then derive 
+\begin_inset Formula $\mathcal{L}_{+}\left(\hat{\boldsymbol{I}}_{nf}\mid v_{nft}\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf},\gamma\right)$
+\end_inset
+
+ along 
+\begin_inset Formula $\hat{\boldsymbol{\Gamma}}_{nf}$
+\end_inset
+
+ to get:
+\begin_inset Formula 
+\begin{equation}
+\hat{\boldsymbol{\Gamma}}_{nf}\leftarrow\hat{\boldsymbol{\Gamma}}_{nf}.\frac{\sum_{t}\lambda_{nft}^{\beta-1}\boldsymbol{\Psi}^{\top}\hat{\boldsymbol{I}}_{nf}.\left[\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right]^{\beta-2}}{\sum_{t}\lambda_{nft}^{\beta}\boldsymbol{\Psi}^{\top}\left[\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right]^{\beta-1}}\label{eq:up_Gamma}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We assume that 
+\begin_inset Formula $\lambda_{nft}$
+\end_inset
+
+ is known.
+ We can then derive 
+\begin_inset Formula $\mathcal{L}_{+}\left(\tilde{\boldsymbol{x}}_{ft}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf},\boldsymbol{\Pi}\right)$
+\end_inset
+
+ along 
+\begin_inset Formula $\hat{\boldsymbol{\Gamma}}_{nf}$
+\end_inset
+
+ to get:
+\begin_inset Formula 
+\begin{align*}
+ & \frac{\partial\mathcal{L}_{+}\left(\tilde{\boldsymbol{x}}_{ft}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf},\boldsymbol{\Pi},\mathbf{\Omega}\right)}{\partial\gamma_{nfp^{\prime\prime}}}\\
+ & =\sum_{t,p,k}\left(\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}-\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}\gamma_{nfp^{\prime\prime}}^{\beta-2}\right)
+\end{align*}
+
+\end_inset
+
+we zeroing and get:
+\begin_inset Formula 
+\[
+\sum_{t,p,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}=\sum_{t,p,k}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}\gamma_{nfp^{\prime\prime}}^{\beta-2}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+i.e:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\gamma_{nfp^{\prime\prime}}\leftarrow\left(\frac{\sum_{t,p}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}}{\sum_{t,p,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}}\right)^{e\left(\beta\right)}
+\]
+
+\end_inset
+
+with substition of the auxiliary variables, we get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\gamma_{nfp^{\prime\prime}}\leftarrow\gamma_{nfp^{\prime\prime}}.\left(\frac{\sum_{t,p}\tilde{x}_{ftp}\lambda_{nft}\tilde{g}_{nfp}^{2-\beta}y_{ftp}^{\beta-2}\psi_{pp^{\prime\prime}}^{2-\beta}\tilde{g}_{nfp}^{\beta-2}\psi_{fpp^{\prime\prime}}^{\beta-1}}{\sum_{t,p,k}y_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}}\right)^{e\left(\beta\right)}
+\]
+
+\end_inset
+
+i.e.:
+\begin_inset Formula 
+\[
+\gamma_{nfp^{\prime\prime}}\leftarrow\gamma_{nfp^{\prime\prime}}.\left(\frac{\sum_{t,p}\tilde{x}_{ftp}\lambda_{nft}y_{ftp}^{\beta-2}\psi_{fpp^{\prime\prime}}}{\sum_{t,p}y_{ftp}^{\beta-1}\lambda_{nft}\psi_{fpp^{\prime\prime}}}\right)^{e\left(\beta\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\hat{\boldsymbol{\Gamma}}_{nf}\leftarrow\hat{\boldsymbol{\Gamma}}_{nf}.\left(\frac{\sum_{t}\lambda_{nft}\boldsymbol{\Psi}_{f}^{\top}\left(\boldsymbol{y}_{ft}^{\odot\beta-2}\odot\tilde{\boldsymbol{x}}_{ft}\right)}{\sum_{t}\lambda_{nft}\boldsymbol{\Psi}_{f}^{\top}\boldsymbol{y}_{ft}^{\odot\beta-1}}\right)^{\odot e\left(\beta\right)}\label{eq:up_Gamma-1}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula 
+\[
+e\left(\beta\right)=\begin{cases}
+\frac{1}{2-\beta} & \mathrm{if}\,\beta<1\\
+1 & \mathrm{if}\:1\leq\beta\leq2
+\end{cases}
+\]
+
+\end_inset
+
+and 
+\begin_inset Formula 
+\begin{align*}
+\boldsymbol{y}_{ft} & \triangleq\left[y_{ft1},\dots,y_{ftP}\right]^{\top}\\
+ & =\sum_{n}\lambda_{nft}\mathbf{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}
+\end{align*}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection
+Estimation of 
+\begin_inset Formula $\lambda_{nft}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We assume that the spatial measures 
+\begin_inset Formula $\Gamma_{nf}$
+\end_inset
+
+ are known.
+ We get:
+\begin_inset Formula 
+\[
+\frac{\partial\mathcal{L}_{+}\left(\tilde{\boldsymbol{x}}_{ft}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf},\boldsymbol{\Pi},\mathbf{\Omega}\right)}{\partial w_{nfk}}=\sum_{t,p}\left(\pi_{ftp}^{\beta-1}h_{nkt}\tilde{g}_{nfp}-\sum_{p^{\prime}}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime}}^{2-\beta}w_{nfk}^{\beta-2}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}\right)
+\]
+
+\end_inset
+
+i.e we have:
+\begin_inset Formula 
+\begin{align*}
+\sum_{t,p=1}^{T,P}\pi_{ftp}^{\beta-1}h_{nkt}\tilde{g}_{nfp} & =w_{nfk}^{\beta-2}\sum_{t,p,p^{\prime}=1}^{T,P,P}\tilde{x}_{fp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime}}^{2-\beta}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+w_{nfk}\leftarrow\left(\frac{\sum_{t,p,p^{\prime}}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime}}^{2-\beta}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}\tilde{x}_{fp}}{\sum_{t,p}h_{nkt}\pi_{ftp}^{\beta-1}\tilde{g}_{nfp}}\right)^{e\left(\beta\right)}\label{eq:up_w-1}
+\end{equation}
+
+\end_inset
+
+ie we get:
+\begin_inset Formula 
+\[
+w_{nfk}\leftarrow w_{nfk}\left(\frac{\sum_{t,p}h_{nkt}y_{ftp}^{\beta-2}\tilde{g}_{nfp}\tilde{x}_{fp}}{\sum_{t,p}h_{nkt}\pi_{ftp}^{\beta-1}\tilde{g}_{nfp}}\right)^{e\left(\beta\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+h_{nkt}\leftarrow h_{nkt}\left(\frac{\sum_{f,p}w_{nfk}y_{ftp}^{\beta-2}\tilde{g}_{nfp}\tilde{x}_{fp}}{\sum_{f,p}w_{nfk}y_{ftp}^{\beta-1}\tilde{g}_{nfp}}\right)^{e\left(\beta\right)}\label{eq:up_h-1}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+E Step
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Given parameters 
+\begin_inset Formula $\boldsymbol{\Theta}$
+\end_inset
+
+ we can formulate a 
+\begin_inset Quotes eld
+\end_inset
+
+linear Wiener filter
+\begin_inset Quotes erd
+\end_inset
+
+ based on the minimization of the covariation norm.
+ We update step by step
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{P}_{nmft}=\int\left(\frac{\boldsymbol{\theta}\boldsymbol{\theta}^{\star}}{\left|\theta_{m}-\left\langle \boldsymbol{w}_{nmft},\boldsymbol{\theta}\right\rangle \right|^{2-\alpha}}-\frac{\boldsymbol{\theta}\boldsymbol{\theta}^{\star}}{\left|\left\langle \boldsymbol{w}_{nmft},\boldsymbol{\theta}\right\rangle \right|^{2-\alpha}}\right)\lambda_{nft}\Gamma_{nf}\left(d\boldsymbol{\theta}\right)+\sum_{n=1}^{N}\int\frac{\boldsymbol{\theta}\boldsymbol{\theta}^{\star}}{\left|\left\langle \boldsymbol{w}_{nmft},\boldsymbol{\theta}\right\rangle \right|^{2-\alpha}}\lambda_{nft}\Gamma_{nf}\left(d\boldsymbol{\theta}\right)\label{eq:P_nm}
+\end{equation}
+
+\end_inset
+
+and 
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{q}_{mft}\leftarrow\boldsymbol{q}_{mft}+\left(\sum_{n}\boldsymbol{P}_{nmft}^{-1}\right)^{-1}\left(\left(\sum_{n}\boldsymbol{w}_{nmft}\right)-\boldsymbol{e}_{m}\right)\label{eq:q_mft}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{w}_{nmft}=\boldsymbol{P}_{nmft}^{-1}\left(\int\frac{\boldsymbol{\theta}\theta_{m}^{\star}}{\left|\theta_{m}-\left\langle \boldsymbol{w}_{nmft},\boldsymbol{\theta}\right\rangle \right|^{2-\alpha}}\lambda_{nft}\Gamma_{nf}\left(d\boldsymbol{\theta}\right)-\boldsymbol{q}_{mft}\right)\label{eq:w_mft}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+A simple and less time consuming filtering than using covariation distance,
+ directly deriving from a linear form of the posterior 
+\begin_inset Formula $\mathbb{E}\left[\boldsymbol{y}_{nft}\mid\boldsymbol{x}_{ft}\right]$
+\end_inset
+
+, is:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\hat{y}_{nft}=\boldsymbol{W}_{nft}\boldsymbol{x}_{ft}
+\]
+
+\end_inset
+
+where
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{W}_{nft}=\lambda_{nft}M\int_{\boldsymbol{\theta}}\mathbf{\varXi}_{ft}\left(\boldsymbol{\theta}\right)\Gamma_{nf}\left(d\boldsymbol{\theta}\right)\label{eq:w_nmft}
+\end{equation}
+
+\end_inset
+
+with:
+\begin_inset Formula 
+\begin{equation}
+\mathbf{\varXi}_{ft}\left(\boldsymbol{\theta}\right)=\boldsymbol{\theta}\text{\left(\frac{\int_{\boldsymbol{\theta}^{\prime}}\boldsymbol{\theta}^{\prime}\frac{\left\langle \boldsymbol{\theta}^{\prime},\boldsymbol{\theta}\right\rangle ^{\left\langle \alpha-1\right\rangle }}{\tilde{\boldsymbol{x}}_{ft}\left(\boldsymbol{\theta}^{\prime}\right)^{\frac{2M+\alpha}{\alpha}}}d\boldsymbol{\theta}^{\prime}}{\int_{\boldsymbol{\theta}^{\prime}}\tilde{\boldsymbol{x}}_{ft}\left(\boldsymbol{\theta}^{\prime}\right)^{-\frac{2M}{\alpha}}d\boldsymbol{\theta}^{\prime}}\right)}^{\mathrm{H}}\label{eq:w_ft}
+\end{equation}
+
+\end_inset
+
+we can rewrite 
+\begin_inset Formula $\mathbf{\varXi}_{ft}\left(\boldsymbol{\theta}\right)$
+\end_inset
+
+ as:
+\begin_inset Formula 
+\[
+\mathbf{\varXi}_{ft}\left(\boldsymbol{\theta}\right)\simeq\boldsymbol{\theta}\text{\left(\frac{\int_{\boldsymbol{\theta}^{\prime}}\boldsymbol{\theta}^{\prime}\frac{\left\langle \boldsymbol{\theta}^{\prime},\boldsymbol{\theta}\right\rangle ^{\left\langle \alpha-1\right\rangle }}{\left(\sum_{n}\lambda_{nft}\boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right){}^{\frac{2M+\alpha}{\alpha}}}d\boldsymbol{\theta}^{\prime}}{\int_{\boldsymbol{\theta}^{\prime}}\left(\sum_{n}\lambda_{nft}\boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right)^{-\frac{2M}{\alpha}}d\boldsymbol{\theta}^{\prime}}\right)}^{\mathrm{H}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Acoustic Model
+\end_layout
+
+\begin_layout Standard
+The main problem for the proposed method is about 
+\begin_inset Formula $\boldsymbol{\theta}_{fp}$
+\end_inset
+
+.
+ We have to sample the hypersphere of dimension 
+\begin_inset Formula $2M$
+\end_inset
+
+...
+ We can instead consider the 
+\begin_inset Formula $\boldsymbol{\theta}_{fp}$
+\end_inset
+
+ as a steering vector.
+ If a farfield region assumption is for instance assumed, we put:
+\begin_inset Formula 
+\[
+\left[\boldsymbol{\theta}_{fp}\right]_{m}=\frac{1}{r_{mp}}\exp\left(-\frac{i\omega_{f}r_{mp}}{c_{0}}\right)
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $r_{mp}$
+\end_inset
+
+ is the (euclidean) distance between the microphone 
+\begin_inset Formula $m$
+\end_inset
+
+ and a point 
+\begin_inset Formula $r$
+\end_inset
+
+, 
+\begin_inset Formula $\omega_{f}$
+\end_inset
+
+ the angular frequency of 
+\begin_inset Formula $f$
+\end_inset
+
+ and 
+\begin_inset Formula $c_{0}$
+\end_inset
+
+ the speed of sound in the air.
+ In this case, we sample 
+\begin_inset Formula $\mathbb{R}^{3}$
+\end_inset
+
+ and not 
+\begin_inset Formula $S^{2M}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Other extensions: A farfield region assumption where we sample 
+\begin_inset Formula $S^{2}$
+\end_inset
+
+ (azimuth and elevation 
+\begin_inset Formula $\left(\theta,\varphi\right)\in\left[0,2\pi\right]\times\left[0,\pi\right]$
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Subsection
+Oracle test
+\end_layout
+
+\begin_layout Standard
+We first investigate the algorithm with the wsj0-mix dataset.
+ 
+\begin_inset Formula $N=2$
+\end_inset
+
+ speakers in an anechoic environment and 
+\begin_inset Formula $M=2$
+\end_inset
+
+ microphones.
+ We assume the microphones and sources positions to be known.
+ Only two steering vectors corresponding to 
+\begin_inset Formula $p_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $p_{2}$
+\end_inset
+
+ the positions of speaker 
+\begin_inset Formula $1$
+\end_inset
+
+ and speaker 
+\begin_inset Formula $2$
+\end_inset
+
+ respectively are computed.
+ The algorithm is set as follow:
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\beta=0$
+\end_inset
+
+ (Itakura-Saito divergence), 
+\begin_inset Formula $\Delta_{t}=4$
+\end_inset
+
+ for the moving average of Levy exponent parameter along the time axis,
+ 
+\begin_inset Formula $K=32$
+\end_inset
+
+ NMF bases and 
+\begin_inset Formula $\alpha=1.4$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+The NMF parameters are randomly initialized as the absolute value of a gaussian
+ sampling.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $500$
+\end_inset
+
+ iterations for the M-Step.
+\end_layout
+
+\begin_layout Itemize
+The spatial measures are initialized as oracle (
+\begin_inset Formula $\Gamma_{1f}=\left[1,0\right]^{\top}$
+\end_inset
+
+, 
+\begin_inset Formula $\Gamma_{2f}=\left[0,1\right]^{\top}$
+\end_inset
+
+) i.e.
+ as a dirac measure (make sense for an anechoic model).
+\end_layout
+
+\begin_layout Itemize
+we normalize the NMF coefficients + spatial measure
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide true
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/nemesis_japan/Dropbox/alpha-Spatial_MNMF/dev/results.png
+	lyxscale 20
+	width 100text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+log-spectrogram of the target 
+\series bold
+(left heatmap)
+\series default
+ and estimated 
+\series bold
+(middle heatmap)
+\series default
+ sources.
+ The spatial measure are displayed on the right column.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+scalar ambiguity in the estimated logPSD
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+the Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:w_ft"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ can be pre-computed before the EM.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\[
+\frac{\partial\mathcal{L}_{+}\left(\hat{\boldsymbol{I}}_{nf}\mid v_{nft}\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf},\gamma\right)}{\partial w_{nfk}}=\sum_{t,p}\left(\gamma_{ftnk}^{1-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta}\left[\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right]^{\beta}-\gamma_{ftnk}^{2-\beta}w_{nfk}^{\beta-2}h_{nkt}^{\beta-1}\hat{\boldsymbol{I}}_{nf}.\left[\boldsymbol{\Psi}\boldsymbol{\Gamma}_{nf}\right]^{\beta-1}\right)
+\]
+
+\end_inset
+
+we get that:
+\begin_inset Formula 
+\begin{equation}
+w_{nfk}\leftarrow w_{nfk}\left(\frac{\sum_{t,p}h_{nkt}\lambda_{nft}^{\beta-2}\left\{ \hat{\boldsymbol{I}}_{nf}.\left[\boldsymbol{\Psi}\boldsymbol{\Gamma}_{nf}\right]^{\beta-1}\right\} _{p}}{\sum_{t,p}h_{nkt}\lambda_{nft}^{\beta-1}\left\{ \left[\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right]^{\beta}\right\} _{p}}\right)^{e\left(\beta\right)}\label{eq:up_w}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\begin{equation}
+h_{nkt}\leftarrow h_{nkt}\left(\frac{\sum_{f,p}w_{nfk}\lambda_{nft}^{\beta-2}\left\{ \hat{\boldsymbol{I}}_{nf}.\left[\boldsymbol{\Psi}\boldsymbol{\Gamma}_{nf}\right]^{\beta-1}\right\} _{p}}{\sum_{f,p}w_{nfk}\lambda_{nft}^{\beta-1}\left\{ \left[\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right]^{\beta}\right\} _{p}}\right)^{e\left(\beta\right)}\label{eq:up_h}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula 
+\[
+e\left(\beta\right)=\begin{cases}
+\frac{1}{2-\beta} & \mathrm{if}\,\beta<1\\
+1 & \mathrm{if}\:1\leq\beta\leq2\\
+\frac{1}{\beta-1} & \mathrm{if}\,\beta>2
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Formula 
+\[
+\frac{\partial\left[\hat{\boldsymbol{I}}_{nf}\right]_{p}}{\partial w_{nfk}}=-2\frac{\frac{\frac{i}{\alpha2^{1/\alpha}}\sum_{t=0}^{T}\lambda_{nft}^{\frac{1-\alpha}{\alpha}}h_{nkt}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\exp\left(i\text{\left(\frac{\lambda_{nft}}{2}\right)}^{1/\alpha}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\right)}{\left|\sum_{t=0}^{T}\exp\left(i\text{\left(\frac{\lambda_{nft}}{2}\right)}^{1/\alpha}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\right)\right|}}{\log\left|\sum_{t=0}^{T}\exp\left(i\text{\left(\frac{\lambda_{nft}}{2}\right)}^{1/\alpha}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\right)\right|}=\frac{-2^{\frac{1+\alpha}{\alpha}}\sum_{t=0}^{T}\lambda_{nft}^{\frac{1-\alpha}{\alpha}}h_{nkt}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\exp\left(i\text{\left(\frac{\lambda_{nft}}{2}\right)}^{1/\alpha}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\right)}{\left|\sum_{t=0}^{T}\exp\left(i\text{\left(\frac{\lambda_{nft}}{2}\right)}^{1/\alpha}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\right)\right|\log\left|\sum_{t=0}^{T}\exp\left(i\text{\left(\frac{\lambda_{nft}}{2}\right)}^{1/\alpha}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\right)\right|}\triangleq\frac{-2^{\frac{1+\alpha}{\alpha}}i\sum_{t=0}^{T}\lambda_{nft}^{\frac{1-\alpha}{\alpha}}h_{nkt}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)}{\left|\sum_{t=0}^{T}\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)\right|\log\left|\sum_{t=0}^{T}\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)\right|}
+\]
+
+\end_inset
+
+we get that:
+\begin_inset Formula 
+\[
+\partial\frac{d_{\beta}\left(\hat{\boldsymbol{I}}_{nf}\mid v_{nft}\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right)}{\partial w_{nfk}}\sum_{p,t}\frac{1}{\beta-1}\left[-\hat{\boldsymbol{I}}_{nf}^{\beta-1}.\left(\frac{2^{\frac{1+\alpha}{\alpha}}i\sum_{t=0}^{T}\lambda_{nft}^{\frac{1-\alpha}{\alpha}}h_{nkt}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)}{\left|\sum_{t=0}^{T}\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)\right|\log\left|\sum_{t=0}^{T}\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)\right|}\right)+\left(\frac{2^{\frac{1+\alpha}{\alpha}}i\sum_{t=0}^{T}\lambda_{nft}^{\frac{1-\alpha}{\alpha}}h_{nkt}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)}{\left|\sum_{t=0}^{T}\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)\right|\log\left|\sum_{t=0}^{T}\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)\right|}\right).\left[\boldsymbol{\Psi}\boldsymbol{\Gamma}_{nf}\right]^{\beta-1}\right]
+\]
+
+\end_inset
+
+i.e.
+\begin_inset Formula 
+\begin{align}
+w_{nfk} & \leftarrow w_{nfk}\frac{\sum_{p,t}\left(\frac{\lambda_{nft}^{\frac{1-\alpha}{\alpha}}h_{nkt}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)}{\left|\sum_{t'=0}^{T}\varphi_{ft'}\left(\boldsymbol{\theta}_{p}\right)\right|\log\left|\sum_{t'=0}^{T}\varphi_{ft'}\left(\boldsymbol{\theta}_{p}\right)\right|}\right).\hat{\boldsymbol{I}}_{nf}^{\beta-1}}{\sum_{p,t}\left(\frac{\lambda_{nft}^{\frac{1-\alpha}{\alpha}}h_{nkt}\Re\left[\boldsymbol{\theta}_{p}^{\star}\boldsymbol{x}_{ft}\right]\varphi_{ft}\left(\boldsymbol{\theta}_{p}\right)}{\left|\sum_{t'=0}^{T}\varphi_{ft'}\left(\boldsymbol{\theta}_{p}\right)\right|\log\left|\sum_{t'=0}^{T}\varphi_{ft'}\left(\boldsymbol{\theta}_{p}\right)\right|}\right).\left[\boldsymbol{\Psi}\boldsymbol{\Gamma}_{nf}\right]^{\beta-1}}\label{eq:up_w2}\\
+h_{nkt} & \leftarrow h_{nkt}\frac{\sum_{f}\lambda_{nft}^{\beta-2}w_{nfk}\hat{\boldsymbol{I}}_{nf}.\left[\boldsymbol{\Psi}\boldsymbol{\Gamma}_{nf}\right]^{\beta-1}}{\sum_{f}w_{nfk}\lambda_{nft}^{\beta-1}\left[\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf}\right]^{\beta}}\label{eq:up_h2}
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
