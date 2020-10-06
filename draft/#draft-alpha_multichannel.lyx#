@@ -302,7 +302,7 @@ with
 \begin_inset Formula 
 \begin{align*}
 \omega_{ftnkp} & =w_{nkf}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\left[\sum_{n,k}w_{nkf}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{-1}\triangleq w_{nkf}h_{nkt}\tilde{g}_{nfp}y_{ftp}^{-1}\\
-\pi_{ftp} & =y_{ftp},\;\rho_{nfpp^{\prime}}=\psi_{fpp^{\prime}}\gamma_{nfp^{\prime}}\tilde{g}_{nfp}^{-1}
+\pi_{ftp} & =y_{ftp},\rho_{nfpp^{\prime}}=\psi_{fpp^{\prime}}\gamma_{nfp^{\prime}}\tilde{g}_{nfp}^{-1}
 \end{align*}
 
 \end_inset
@@ -401,7 +401,7 @@ We assume that
 we zeroing and get:
 \begin_inset Formula 
 \[
-\sum_{t,p,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}=\gamma_{nfp^{\prime\prime}}^{\beta-2}\sum_{t,p,k}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}
+\sum_{t,p,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}=\sum_{t,p,k}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}\gamma_{nfp^{\prime\prime}}^{\beta-2}
 \]
 
 \end_inset
@@ -416,7 +416,7 @@ i.e:
 \begin_layout Standard
 \begin_inset Formula 
 \[
-\gamma_{nfp^{\prime\prime}}\leftarrow\left(\frac{\sum_{t,p,k}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}}{\sum_{t,p,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}}\right)^{e\left(\beta\right)}
+\gamma_{nfp^{\prime\prime}}\leftarrow\left(\frac{\sum_{t,p}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}}{\sum_{t,p,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}}\right)^{e\left(\beta\right)}
 \]
 
 \end_inset
@@ -427,7 +427,7 @@ with substition of the auxiliary variables, we get:
 \begin_layout Standard
 \begin_inset Formula 
 \[
-\gamma_{nfp^{\prime\prime}}\leftarrow\gamma_{nfp^{\prime\prime}}.\left(\frac{\sum_{t,p}\tilde{x}_{ftp}\lambda_{nft}\tilde{g}_{nfp}^{2-\beta}y_{ftp}^{\beta-2}\psi_{fpp^{\prime\prime}}^{2-\beta}\tilde{g}_{nfp}^{\beta-2}\psi_{fpp^{\prime\prime}}^{\beta-1}}{\sum_{t,p}y_{ftp}^{\beta-1}\lambda_{nft}\psi_{fpp^{\prime\prime}}}\right)^{e\left(\beta\right)}
+\gamma_{nfp^{\prime\prime}}\leftarrow\gamma_{nfp^{\prime\prime}}.\left(\frac{\sum_{t,p}\tilde{x}_{ftp}\lambda_{nft}\tilde{g}_{nfp}^{2-\beta}y_{ftp}^{\beta-2}\psi_{pp^{\prime\prime}}^{2-\beta}\tilde{g}_{nfp}^{\beta-2}\psi_{fpp^{\prime\prime}}^{\beta-1}}{\sum_{t,p,k}y_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}}\right)^{e\left(\beta\right)}
 \]
 
 \end_inset
@@ -672,7 +672,7 @@ where
 \end_inset
 
  and a point 
-\begin_inset Formula $p$
+\begin_inset Formula $r$
 \end_inset
 
 , 
@@ -710,6 +710,10 @@ Other extensions: A farfield region assumption where we sample
 \end_inset
 
 ).
+\end_layout
+
+\begin_layout Standard
+
 \end_layout
 
 \begin_layout Subsection

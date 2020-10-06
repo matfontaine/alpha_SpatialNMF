@@ -17,15 +17,13 @@ except:
 
 
 class alpha_SpatialMNMF():
-    def __init__(self, n_source=2, DIR_PATH=None, alpha=1.8, beta=0, seed=1, n_Th=180, n_basis=8, xp=np, init_SM="unit"):
+    def __init__(self, n_source=2, n_mic=2, n_sample=2000, DIR_PATH=None, alpha=1.8, beta=0, seed=1, n_Th=180, xp=np, init_SM="unit"):
         """ initialize alpha_SpatialMNMF
 
         Parameters:
         -----------
             n_source: int
                 the number of sources
-            n_basis: int
-                the number of NMF bases of each source
             n_Th :      int
                 number of sphere sampling
             init_SM: str
@@ -35,12 +33,11 @@ class alpha_SpatialMNMF():
         self.eps = 1e-7
         self.DIR_PATH = DIR_PATH
         self.n_Th = n_Th # number of sphere sampling
-        self.n_basis = n_basis 3 # nmf basis
         self.n_source = n_source
         self.alpha = alpha # characteristic exponent
-        self.delta_T = 4 # average time horizon
+        self.n_mic = n_mic
+        self.n_sample = n_sample
         self.l1 = 0.0  # l1 regularization
-        self.delta_F = 1
         self.beta = beta # beta divergence
         if self.beta < 1.:
             self.e = (2 - self.beta) ** (-1)
@@ -64,35 +61,101 @@ class alpha_SpatialMNMF():
         else:
             return self.xp.asnumpy(data)
 
-    def load_spectrogram(self, X_FTM):
-        """ load complex spectrogram
-
-        Parameters:
-        -----------
-            X_FTM: self.xp.array [ F x T x M ]
-                power spectrogram of observed signals
+    def alpha_sampling(self, alpha=1, beta=1, mu=0, sigma=1, shape=None, seed=None):
         """
-        self.n_freq, self.n_time, self.n_mic = X_FTM.shape
-        self.X_FTM = self.xp.asarray(X_FTM, dtype=self.xp.complex)
+           Input
+           -----
+           alpha: 0 < alpha <=2
+               exponential characteristic coefficient
+           beta: -1 <= beta <= 1
+               skewness parameter
+           mu: real
+               the mean
+           sigma: positive real
+                  scale parameter
+           shape: as you want :) (give a tuple)
+                  size and number of sampling
 
+           Returns
+           -------
+           S: shape
+               give a sampling of an S(alpha, beta, mu, sigma) variable
+
+           """
+
+        if seed is None:
+            W = self.xp.random.exponential(1, shape)
+            U = self.xp.random.uniform(-self.xp.pi / 2., self.xp.pi / 2., shape)
+
+            c = -beta * self.xp.tan(self.xp.pi * alpha / 2.)
+            if alpha != 1:
+                ksi = 1 / alpha * self.xp.arctan(-c)
+                res = ((1. + c ** 2) ** (1. / 2. * alpha)) * self.xp.sin(alpha * (U + ksi)) / ((self.xp.cos(U)) ** (1. / alpha)) \
+                      * ((self.xp.cos(U - alpha * (U + ksi))) / W) ** ((1. - alpha) / alpha)
+
+            else:
+                ksi = self.xp.pi / 2.
+                res = (1. / ksi) * ((self.xp.pi / 2. + beta * U) * self.xp.tan(U) -
+                                    beta * self.xp.log((self.xp.pi / 2. * W * self.xp.cos(U)) / (self.xp.pi / 2. + beta * U)))
+
+        else:
+            _random = self.xp.random.RandomState(seed)
+            W = _random.exponential(1, shape)
+            U = _random.uniform(-self.xp.pi / 2., self.xp.pi / 2., shape)
+
+            c = -beta * self.xp.tan(self.xp.pi * alpha / 2.)
+            if alpha != 1:
+                ksi = 1 / alpha * self.xp.arctan(-c)
+                res = ((1. + c ** 2) ** (1. / 2. * alpha)) * self.xp.sin(alpha * (U + ksi)) / ((self.xp.cos(U)) ** (1. / alpha)) \
+                      * ((self.xp.cos(U - alpha * (U + ksi))) / W) ** ((1. - alpha) / alpha)
+
+            else:
+                ksi = self.xp.pi / 2.
+                res = (1. / ksi) * ((self.xp.pi / 2. + beta * U) * self.xp.tan(U) -
+                                    beta * self.xp.log((self.xp.pi / 2. * W * self.xp.cos(U)) / (self.xp.pi / 2. + beta * U)))
+        return res * sigma + mu
+
+    def compute_sampling(self):
+        self.SM_true_NP = self.xp.zeros((self.n_source, self.n_Th)).astype(self.xp.float32)  # (N, P)
+        self.lambda_true_NT = self.rand_s.rand(self.n_source, self.n_sample)
+        S_NTP = self.xp.zeros((self.n_source, self.n_sample, self.n_Th)).astype(self.xp.float32)  # sources (N, T, P)
+        self.Y_true_NTM = self.xp.zeros((self.n_source, self.n_sample, self.n_mic)).astype(self.xp.float32)  # img_sources (N, T, M)
+        Cste = float(2. * self.xp.pi ** (self.n_mic) / np.math.factorial(self.n_mic))
+        Cste /= self.n_Th
+
+        for n in range(self.n_source):  # Dirac assumption
+            self.SM_true_NP[n, int(self.n_Th / (self.n_source + 2))] = 1.
+            for dP in range(self.n_Th):
+                S_NTP[n, :, dP] = self.alpha_sampling(alpha=self.alpha, beta=0,
+                                                      mu=0, sigma=self.SM_true_NP[n, dP],
+                                                      shape=(self.n_sample),
+                                                      seed=self.seed)
+                S_NTP[n, :, dP] *= (self.lambda_true_NT[n] ** (1. / self.alpha))
+            self.Y_true_NTM[n, ...] = Cste * np.sum(self.Theta_PM[None, ...] *
+                                                    S_NTP[n, :, :, None], axis=-2)
     def compute_Theta_Oracle(self):  # Nearfield region assumption and Spatial measure = Diracs
         data = loadmat("rir_info.mat")
-        index = 5000 + int(self.file_id)
+        index = 5000
         mic_pos = data['INFO'][0][index]['mic_pos'][:self.n_mic]
         spk_pos = data['INFO'][0][index]['spk_pos'][:self.n_source]
-        self.n_Th = self.n_source
-        self.Theta_FPM = self.xp.zeros((self.n_freq, self.n_Th, self.n_mic)).astype(complex)
-        r_PM = self.xp.zeros((self.n_source, self.n_mic)).astype(float)
+        self.Theta_PM = self.xp.zeros((self.n_Th, self.n_mic)).astype(complex)
+        r_PM = self.xp.zeros((self.n_Th, self.n_mic)).astype(float)
         for m in range(self.n_mic):
             for n in range(self.n_source):
                 r_PM[n, m] = self.xp.linalg.norm(spk_pos[n] - mic_pos[m])
+
+        for p in range(self.n_source, self.n_Th):
+            r_PM[p, :] = self.xp.abs(self.rand_s.rand(self.n_mic)) + 0.5
 
         c =340. # speed of the sound in the air
         freq_F = self.xp.fft.rfftfreq(2048, 1. / 16000.).astype(np.float32)
 
         # nearfield assumption with the real distance
-        self.Theta_FPM = 1./self.xp.maximum(3., r_PM[None,...]) * self.xp.exp(-2j*self.xp.pi*freq_F[:,None,None]*r_PM[None,...]/c)
-        self.Theta_FPM /= self.xp.linalg.norm(self.Theta_FPM, axis=-1, keepdims=True)
+        self.Theta_PM = 1./self.xp.maximum(3., r_PM) *\
+                     self.xp.exp(-2j * self.xp.pi *
+                                 freq_F[len(freq_F) // 2, None, None] *
+                                 r_PM / c)
+        self.Theta_PM /= self.xp.linalg.norm(self.Theta_PM, axis=-1, keepdims=True)
 
     def init_variable(self):
         # hypersphere sampling
@@ -103,11 +166,13 @@ class alpha_SpatialMNMF():
         # auxiliary spatial variables
         # P x P' x M
         self.compute_Theta_Oracle()
-        self.ThTh_FPP = (self.Theta_FPM.conj()[:, :, None] * self.Theta_FPM[:, None]).sum(axis=-1)  # F x P x P'
-        self.Psi_FPP = self.xp.abs(self.ThTh_FPP) ** (self.alpha)
+        self.compute_sampling()
+        self.X_TM = self.Y_true_NTM.sum(axis=0)
+        self.ThTh_PP = (self.Theta_PM.conj()[:, None] * self.Theta_PM[None]).sum(axis=-1)  # F x P x P'
+        self.Psi_PP = self.xp.abs(self.ThTh_PP) ** (self.alpha)
 
-        phi_F = self.xp.sum(self.Psi_FPP * self.Psi_FPP.conj(), axis=(1, 2)).real / self.n_mic
-        self.Psi_FPP = self.Psi_FPP / self.xp.sqrt(phi_F)[:, None, None]
+        phi = self.xp.sum(self.Psi_PP * self.Psi_PP.conj()).real / self.n_mic
+        self.Psi_PP = self.Psi_PP / self.xp.sqrt(phi)
         # Sketching and spatial parameters
         # self.compute_Lexp_est()
         self.compute_Lexp_est2()
@@ -123,55 +188,39 @@ class alpha_SpatialMNMF():
 
     def init_SMs(self):
         if "ones" == self.init_SM:
-            self.SM_NFP = self.xp.ones((self.n_source, self.n_freq, self.n_Th)).astype(self.xp.float)
+            self.SM_NP = self.xp.ones((self.n_source, self.n_Th)).astype(self.xp.float)
             # self.SM_NFP = self.rand_s.rand(self.n_source, self.n_freq, self.n_Th)
         elif "circ" == self.init_SM:
-            self.SM_NFP =  self.xp.maximum(1e-2, self.xp.zeros([self.n_source, self.n_freq, self.n_Th], dtype=self.xp.float))
+            self.SM_NP =  self.xp.maximum(1e-2, self.xp.zeros([self.n_source, self.n_Th], dtype=self.xp.float))
             for p in range(self.n_Th):
-                self.SM_NFP[p%self.n_source, :, p] = 1
+                self.SM_NP[p % self.n_source, p] = 1
         else:
             print("Specify how to initialize the Spatial Measure {ones, circ}")
             raise ValueError
 
     def init_PSD(self):
-        self.W_NFK = self.rand_s.rand(self.n_source, self.n_freq, self.n_basis)
-        self.H_NKT = self.rand_s.rand(self.n_source, self.n_basis, self.n_time)
-        self.lambda_NFT = self.W_NFK @ self.H_NKT + self.eps
+        self.lambda_NT = self.rand_s.rand(self.n_source, self.n_sample)
 
+    def update_PSD(self):
+        # N x T x Pp
+        num_l = (self.Y_TP[None] ** (self.beta - 2.) *\
+                      self.X_TP[None] *\
+                      self.G_NP[:, None]).sum(axis=-1)
+        den_l = (self.Y_TP[None] ** (self.beta - 1.) *\
+                 self.G_NP[:, None]).sum(axis=-1) + self.eps + self.l1
 
-    def update_WH(self):
-        # N x F x K x T x Pp
-        num_W = (self.Y_FTP[None, :, None, ...] ** (self.beta - 2.) *\
-                 self.H_NKT[:, None, ..., None] *\
-                 self.X_FTP[None, :, None] *\
-                 self.G_NFP[:, :, None, None]).sum(axis=(-1, -2))
-        den_W = (self.Y_FTP[None, :, None, ...]  ** (self.beta - 1.) *\
-                 self.H_NKT[:, None, ..., None] *\
-                 self.G_NFP[:, :, None, None]).sum(axis=(-1, -2)) + self.eps + self.l1
-
-        self.W_NFK *= (num_W/den_W) ** self.e
-        self.reset_variable()
-
-        # N x F x K x T x Pp
-        num_H = (self.Y_FTP[None, :, None, ...] ** (self.beta - 2.) *\
-                 self.W_NFK[..., None, None] *\
-                 self.X_FTP[None, :, None] *\
-                 self.G_NFP[:, :, None, None]).sum(axis=(-1, 1))
-        den_H = (self.Y_FTP[None, :, None, ...] ** (self.beta - 1.) *\
-                 self.W_NFK[..., None, None] *\
-                 self.G_NFP[:, :, None, None]).sum(axis=(-1, 1)) + self.eps + self.l1
-        self.H_NKT *= (num_H/den_H) ** self.e
+        self.lambda_NT *= (num_l/den_l) ** self.e
         self.reset_variable()
 
     def update_SM(self):
-        # N x F x T x P
-        num_SM = (self.lambda_NFT[..., None] *\
-                  (self.Psi_FPP[:, None] * self.X_FTP[:, :, None]).sum(axis=-1)[None] *\
-                  self.Y_FTP[None] ** (self.beta - 2.)).sum(axis=2)
-        den_SM = (self.lambda_NFT[..., None] *\
-                  (self.Psi_FPP[:, None] * (self.Y_FTP[:, :, None] ** (self.beta -1.))).sum(axis=-1)[None]
-                  ).sum(axis=2) + self.eps + self.l1
-        self.SM_NFP *= (num_SM / den_SM) ** self.e
+        # N x T x P
+        num_SM = (self.lambda_NT[..., None] *\
+                  (self.Psi_PP[None] * self.X_TP[:, None]).sum(axis=-1)[None] *\
+                  self.Y_TP[None] ** (self.beta - 2.)).sum(axis=1)
+        den_SM = (self.lambda_NT[..., None] *\
+                  (self.Psi_PP[None] * (self.Y_TP[:, None] ** (self.beta -1.))).sum(axis=-1)[None]
+                  ).sum(axis=1) + self.eps + self.l1
+        self.SM_NP *= (num_SM / den_SM) ** self.e
 #        self.SM_NFP[0, :, 0] = 1.
 #        self.SM_NFP[1, :, 1] = 1.
 #        self.SM_NFP[0, :, 1] = 1e-3
@@ -181,9 +230,8 @@ class alpha_SpatialMNMF():
 
 
     def reset_variable(self):
-        self.G_NFP = (self.Psi_FPP[None, ...] * self.SM_NFP[:, :, None, :]).sum(axis=-1)
-        self.lambda_NFT = self.W_NFK @ self.H_NKT + self.eps
-        self.Y_FTP = (self.lambda_NFT[..., None] * self.G_NFP[:, :, None]).sum(axis=0)
+        self.G_NP = (self.Psi_PP[None, ...] * self.SM_NP[:, None, :]).sum(axis=-1)
+        self.Y_TP = (self.lambda_NT[..., None] * self.G_NP[:, None]).sum(axis=0)
 
     def compute_Lexp_est(self):
 
@@ -194,23 +242,10 @@ class alpha_SpatialMNMF():
         c = 2 ** (1. / self.alpha)
         eps = 1e-10
 
-        ThX = self.xp.real((self.Theta_FPM[:, None].conj() * self.X_FTM[:, :, None]).sum(axis=-1))  # F x T x P
+        ThX = self.xp.real((self.Theta_PM[None].conj() * self.X_TM[:, None]).sum(axis=-1))  # F x T x P
         Chf = self.xp.exp((1j / c) * ThX) + eps  # F x T x P
 
-        self.X_FTP = self.xp.zeros_like(Chf)
-        # self.X_FTP = Chf
-        for f in range(self.n_freq):
-            for p in range(self.n_Th):
-                self.X_FTP[f, :, p] = self.xp.convolve(self.xp.ones(self.delta_T)/self.delta_T,
-                                                       Chf[f, :, p],
-                                                       mode="same")
-        # for t in range(self.n_time):
-        #     for p in range(self.n_Th):
-        #         self.X_FTP[:, t, p] = self.xp.convolve(self.xp.ones(self.delta_F)/self.delta_F,
-        #                                                Chf[:, t, p],
-        #                                                mode="same")
-        # import ipdb; ipdb.set_trace()
-        self.X_FTP = -2 * self.xp.log(self.xp.abs(self.X_FTP))
+        self.X_TP = -2 * self.xp.log(self.xp.abs(self.X_TP))
 
     def compute_Lexp_est2(self):
 
@@ -219,39 +254,22 @@ class alpha_SpatialMNMF():
         """
         eps = 1e-10
 
-        ThX = self.xp.real((self.Theta_FPM[:, None].conj() * self.X_FTM[:, :, None]).sum(axis=-1))  # F x T x P
-        Chf = self.xp.cos(ThX) # F x T x P
+        ThX = self.xp.real((self.Theta_PM[None].conj() * self.X_TM[:, None]).sum(axis=-1))  # F x T x P
+        Chf = self.xp.cos(ThX)  # F x T x P
 
-        self.X_FTP = self.xp.zeros_like(Chf)
-        # self.X_FTP = Chf
-        for f in range(self.n_freq):
-            for p in range(self.n_Th):
-                self.X_FTP[f, :, p] = self.xp.convolve(self.xp.hanning(self.delta_T)/self.delta_T,
-                                                       Chf[f, :, p],
-                                                       mode="same")
-        # for t in range(self.n_time):
-        #     for p in range(self.n_Th):
-        #         self.X_FTP[:, t, p] = self.xp.convolve(self.xp.ones(self.delta_F)/self.delta_F,
-        #                                                Chf[:, t, p],
-        #                                                mode="same")
-        # import ipdb; ipdb.set_trace()
-        self.X_FTP = - self.xp.log(self.xp.abs(self.X_FTP))
+        self.X_TP = - self.xp.log(self.xp.abs(Chf))
 
     def normalize(self):
         # self.W_NFK = self.W_NFK / phi_F[None, :, None]
 
-        mu_NF = (self.SM_NFP).sum(axis=-1)
-        self.SM_NFP = self.SM_NFP / mu_NF[..., None]
+        mu_N = (self.SM_NP).sum(axis=-1)
+        self.SM_NP = self.SM_NP / mu_N[:, None]
 
-        self.G_NFP = (self.Psi_FPP[None, ...] * self.SM_NFP[:, :, None, :]).sum(axis=-1)
+        self.G_NP = (self.Psi_PP[None, ...] * self.SM_NP[:, None, :]).sum(axis=-1)
 
-        mu_NF = (self.G_NFP).sum(axis=-1)
-        self.G_NFP = self.G_NFP / mu_NF[..., None]
-        self.W_NFK = self.W_NFK * mu_NF[..., None]
-
-        nu_NK = self.W_NFK.sum(axis=1)
-        self.W_NFK = self.W_NFK / nu_NK[:, None]
-        self.H_NKT = self.H_NKT * nu_NK[:, :, None]
+        mu_NF = (self.G_NP).sum(axis=-1)
+        self.G_NP = self.G_NP / mu_NF[..., None]
+        self.lambda_NT = self.lambda_NT * mu_N[:, None]
 
         self.reset_variable()
 
@@ -269,28 +287,28 @@ class alpha_SpatialMNMF():
         #     stft_sp = np.asarray(librosa.core.stft(np.asfortranarray(tmp_true_s[:, 0]), n_fft=2048, hop_length=512))
         #     lambda_true_NFT[i_sp] = np.abs(stft_sp)
         # self.lambda_NFT = self.xp.array(lambda_true_NFT)
-        self.Y_FTP = (self.lambda_NFT[..., None] * self.G_NFP[:, :, None]).sum(axis=0)
+        self.Y_TP = (self.lambda_NT[..., None] * self.G_NP[:, None]).sum(axis=0)
         # Numerator
-        ThTh_alpha = self.ThTh_FPP * (self.xp.abs(self.ThTh_FPP) ** (self.alpha - 2.)) # F x P x P'
-        temp_num = ThTh_alpha[:, None] / (self.Y_FTP[:, :, None, :] ** (2 * self.n_mic/self.alpha + 1.))  # F x T x P x P'
+        ThTh_alpha = self.ThTh_PP * (self.xp.abs(self.ThTh_PP) ** (self.alpha - 2.))  # P x P'
+        temp_num = ThTh_alpha[None] / (self.Y_TP[:, None, :] ** (2 * self.n_mic/self.alpha + 1.))  # T x P x P'
 
-        # F x T x  P x P' x M
-        Num = (temp_num[..., None] * self.Theta_FPM[:, None, :, None]).sum(axis=-2)  # F x T x P x M
+        # T x  P x P' x M
+        Num = (temp_num[..., None] * self.Theta_PM[None, :, None]).sum(axis=-2)  # T x P x M
 
         # Denominator
-        Den = ((self.Y_FTP) ** (-2 * self.n_mic/self.alpha)).sum(axis=-1) # F x T
+        Den = ((self.Y_TP) ** (-2 * self.n_mic/self.alpha)).sum(axis=-1)  # T
 
-        # first F T P M M
-        self.Xi_FTMMP = self.n_mic * (self.Theta_FPM[:, None, :, None] *
-                                      (Num/Den[..., None, None])[..., None].conj()).transpose(0, 1, 3, 4, 2)
+        # first T P M M
+        self.Xi_TMMP = self.n_mic * (self.Theta_PM[None, :, None] *
+                                      (Num/Den[..., None, None])[..., None].conj()).transpose(0, 2, 3, 1)
 
-        # N F T M M P
-        Mask_NFTMM = (self.lambda_NFT[..., None, None, None] *\
-                      self.Xi_FTMMP[None] *\
-                      self.SM_NFP[:, :, None, None, None]).sum(axis=-1)
+        # N T M M P
+        Mask_NTMM = (self.lambda_NT[..., None, None, None] *\
+                      self.Xi_TMMP[None] *\
+                      self.SM_NP[:, None, None, None]).sum(axis=-1)
         # Mask_NFTMM *= 2. * self.xp.pi ** (self.n_mic) / np.math.factorial(self.n_mic)
         # Mask_NFTMM /= self.n_Th
-        self.Y_NFTM = (Mask_NFTMM * self.X_FTM[None, :, :, None]).sum(axis=-1)
+        self.Y_NTM = (Mask_NTMM * self.X_TM[None, :, None]).sum(axis=-1)
 
 
         # # F x P x P' x M
@@ -311,25 +329,21 @@ class alpha_SpatialMNMF():
         # self.Y_NFTM = (Mask_NFTMM * self.X_FTM[None, :, :, None]).sum(axis=-1)
 
     def M_Step(self):
-        self.update_WH()
+        self.update_PSD()
         self.update_SM()
         self.normalize()
 
     def save_parameter(self, fileName):
-        Base_path, id = os.path.split(os.path.split(self.DIR_PATH)[0])[0], os.path.split(self.DIR_PATH)[1]
-        File_sp = [os.path.join(Base_path, "s" + str(i_sp), id) for i_sp in range(1, self.n_source + 1)]
-
-        lambda_true_NFT = np.zeros((self.n_source, self.n_freq, self.n_time)).astype(np.float)
-        for i_sp in range(self.n_source):
-            tmp_true_s, fs = sf.read(File_sp[i_sp])
-            stft_sp = np.asarray(librosa.core.stft(np.asfortranarray(tmp_true_s[:, 0]), n_fft=2048, hop_length=512))
-            lambda_true_NFT[i_sp] = np.abs(stft_sp) ** 2. + 1e-7
         if self.xp != np:
-            lambda_NFT = self.convert_to_NumpyArray(self.lambda_NFT)
-            SM_NFP = self.convert_to_NumpyArray(self.SM_NFP)
-        np.savez(fileName, lambda_NFT=lambda_NFT,
-                 lambda_true_NFT=lambda_true_NFT,
-                 SM_NFP=SM_NFP)
+            lambda_NT = self.convert_to_NumpyArray(self.lambda_NT)
+            SM_NP = self.convert_to_NumpyArray(self.SM_NP)
+            lambda_true_NT = self.convert_to_NumpyArray(self.lambda_true_NT)
+            Y_NTM = self.convert_to_NumpyArray(self.Y_NTM)
+            Y_true_NTM = self.convert_to_NumpyArray(self.Y_true_NTM)
+        np.savez(fileName, lambda_NT=lambda_NT,
+                 lambda_true_NT=lambda_true_NT,
+                 SM_NFP=SM_NP, Y_true_NTM=Y_true_NTM,
+                 Y_NTM=Y_NTM)
 
     def solve(self, n_iteration=100, save_likelihood=False, save_parameter=False, save_wav=False, save_path="./", interval_save_parameter=30):
         """
@@ -386,48 +400,34 @@ class alpha_SpatialMNMF():
         if save_wav and ((it+1) % interval_save_parameter == 0) and ((it+1) != self.n_iteration):
             self.save_separated_signal(save_path+"{}-{}-{}".format(self.method_name, self.filename_suffix, it + 1))
 
-        if save_wav and ((it+1) == self.n_iteration):
-            self.E_Step()
-            self.save_separated_signal(save_path+"{}-{}".format(self.method_name, self.filename_suffix))
+        # separation of alpha-stable random vector
+        self.E_Step()
         if save_parameter:
             self.save_parameter(save_path + "{}-parameters-{}.npz".format(self.method_name, self.filename_suffix))
 
     def calculate_beta_div(self):
 
         if self.beta == 0.:      # IS Divergence
-            value = ((self.X_FTP / (self.Y_FTP + self.eps)) -
-                     (self.xp.log(self.X_FTP) - self.xp.log(self.Y_FTP)) -
+            value = ((self.X_TP / (self.Y_TP + self.eps)) -
+                     (self.xp.log(self.X_TP) - self.xp.log(self.Y_TP)) -
                      1.).sum()
 
         elif self.beta == 1.:    # KL Divergence
-            value = (self.X_FTP * (self.xp.log(self.X_FTP) - self.xp.log(self.Y_FTP)) +
-                     (self.Y_FTP - self.X_FTP) -
+            value = (self.X_TP * (self.xp.log(self.X_TP) - self.xp.log(self.Y_TP)) +
+                     (self.Y_TP - self.X_TP) -
                      1.).sum()
         else:
             value = ((self.beta) * (self.beta -1.)) ** (-1) * (
-                     (self.X_FTP ** (self.beta)) +
-                     (self.beta - 1) * (self.Y_FTP) ** (self.beta) -
-                     (self.beta) * self.X_FTP *
-                     (self.Y_FTP) ** (self.beta - 1.)
+                     (self.X_TP ** (self.beta)) +
+                     (self.beta - 1) * (self.Y_TP) ** (self.beta) -
+                     (self.beta) * self.X_TP *
+                     (self.Y_TP) ** (self.beta - 1.)
                      ).sum()
         return value
 
-    def save_separated_signal(self, save_fileName="sample.wav"):
-        self.Y_NFTM = self.convert_to_NumpyArray(self.Y_NFTM)
-        hop_length = int((self.n_freq - 1) / 2)
-        for n in range(self.n_source):
-            for m in range(self.n_mic):
-                tmp = librosa.core.istft(self.Y_NFTM[n, :, :, m], hop_length=hop_length)
-                if n == 0 and m == 0:
-                    separated_signal = np.zeros([self.n_source, len(tmp), self.n_mic])
-                separated_signal[n, :, m] = tmp
-        separated_signal /= np.abs(separated_signal).max() * 1.2
-
-        for n in range(self.n_source):
-            sf.write(save_fileName + "-N={}.wav".format(n), separated_signal[n], 16000)
 
     def make_filename_suffix(self):
-        self.filename_suffix = "M={}-S={}-it={}-K={}-init={}-rand={}".format(self.n_mic, self.n_source, self.n_iteration, self.n_basis, self.init_SM, self.seed)
+        self.filename_suffix = "M={}-S={}-it={}-init={}-rand={}".format(self.n_mic, self.n_source, self.n_iteration, self.init_SM, self.seed)
 
         if hasattr(self, "file_id"):
             self.filename_suffix += "-ID={}".format(self.file_id)
