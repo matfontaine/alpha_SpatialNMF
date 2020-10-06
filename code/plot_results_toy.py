@@ -12,18 +12,21 @@ S = 2
 M = 2
 K = 32
 init = "circ"
-EST_DIR_A = "/home/mafontai/Documents/project/git_project/speech_separation/alpha_SpatialMNMF/results_2anechoic/dev/"
+EST_DIR_A = "/home/mafontai/Documents/project/git_project/speech_separation/alpha_SpatialMNMF/results_2toy/dev/"
 SAVE_PATH_A = os.path.join(EST_DIR_A, "alpha=%s" % str(HYP), "beta=%s" % str(BETA))
-file_path = os.path.join(SAVE_PATH_A, "alpha_SpatialMNMF-likelihood-interval=10-M={}-S={}-it={}-K={}-init={}-rand=1-ID=0.pic").format(str(M), str(S), str(it), str(K), init)
+file_path = os.path.join(SAVE_PATH_A, "alpha_SpatialMNMF-likelihood-interval=10-M={}-S={}-it={}-init={}-rand=1-ID=0.pic").format(str(M), str(S), str(it), init)
 data_likelihood =  pic.load(open(file_path, 'rb'))
 li_it = np.arange(1, it + 1, 10)
 
 file_path = os.path.join(SAVE_PATH_A, "alpha_SpatialMNMF-parameters-M={}-S={}-it={}-K={}-init={}-rand=1-ID=0.npz").format(str(M), str(S), str(it), str(K), init)
 file = np.load(file_path)
 
-lambda_NFT = file['lambda_NFT']
-lambda_true_NFT=file['lambda_true_NFT']
-SM_NFP = file['SM_NFP']
+lambda_NT = file['lambda_NT']
+lambda_true_NT = file['lambda_true_NT']
+SM_NP = file['SM_NFP']
+Y_true_NTM = file['Y_true_NTM']
+Y_NTM = file['Y_NTM']
+
 
 fig_width_pt = 400.6937  # Get this from LaTeX using \showthe\columnwidth
 inches_per_pt = 1.0 / 72.27               # Convert pt to inch
@@ -34,9 +37,7 @@ fig_size = np.array([(S + 2) * fig_width, 3. * fig_height])
 
 
 fig = plt.figure(tight_layout=True, figsize=fig_size)
-gs = gridspec.GridSpec(nrows=S + 2, ncols=3)
-
-
+gs = gridspec.GridSpec(nrows=S + 2, ncols=5)
 
 
 # beta divergence
@@ -46,35 +47,45 @@ ax.set(xlabel='number of iterations', ylabel='beta_div', title='beta-divergence 
 
 for n in range(S):
     ax = fig.add_subplot(gs[n+1, 0])
-    im = ax.imshow(np.log(lambda_true_NFT[n]), interpolation='nearest', origin='lower', aspect='auto')
-    fig.colorbar(im, ax=ax)
-    ax.set(xlabel='time frame', ylabel='frequency', title='true logPSD s{}'.format(n+1))
+    im = ax.plot(lambda_true_NT[n])
+    ax.set(xlabel='sample', ylabel='value', title='true lambda s{}'.format(n+1))
 
     ax = fig.add_subplot(gs[n+1, 1])
-    im = ax.imshow(np.log(lambda_NFT[n]), interpolation='nearest', origin='lower', aspect='auto')
-    fig.colorbar(im, ax=ax)
-    ax.set(xlabel='time frame', ylabel='frequency', title='est logPSD s{}'.format(n+1))
+    im = ax.plot(lambda_NT[n])
+    ax.set(xlabel='sample', ylabel='value', title='est lambda s{}'.format(n+1))
 
     ax = fig.add_subplot(gs[n+1, 2])
-    im = ax.imshow(SM_NFP[n], interpolation='nearest', origin='lower', aspect='auto')
+    im = ax.plot(SM_NP[n])
+    ax.set(xlabel='directions', ylabel='value', title='spatial measure s{}'.format(n+1))
+
+    ax = fig.add_subplot(gs[n+1, 3])
+    im = ax.scatter(np.abs(Y_true_NTM[n, :, 0]), np.abs(Y_true_NTM[n, :, 1]))
+    ax.set(xlabel='1st component', ylabel='2nd component', title='true x{}'.format(n+1))
+
+    ax = fig.add_subplot(gs[n+1, 4])
+    im = ax.scatter(np.abs(Y_NTM[n, :, 0]), np.abs(Y_NTM[n, :, 1]))
     fig.colorbar(im, ax=ax)
-    ax.set(xlabel='directions', ylabel='frequency', title='spatial measure s{}'.format(n+1))
+    ax.set(xlabel='1st component', ylabel='2nd component', title='est x{}'.format(n+1))
 
-ax = fig.add_subplot(gs[-1, 0])
-im = ax.imshow(np.log(lambda_true_NFT.sum(axis=0)), interpolation='nearest', origin='lower', aspect='auto')
+
+
+ax = fig.add_subplot(gs[n+1, 0])
+im = ax.plot(lambda_true_NT.sum(axis=0))
+ax.set(xlabel='sample', ylabel='value', title='true lambda obs')
+
+ax = fig.add_subplot(gs[n+1, 1])
+im = ax.plot(lambda_NT.sum(axis=0))
+ax.set(xlabel='sample', ylabel='value', title='est lambda obs')
+
+ax = fig.add_subplot(gs[n+1, 2])
+im = ax.plot(SM_NP.sum(axis=0))
+ax.set(xlabel='directions', ylabel='value', title='spatial measure obs')
+
+ax = fig.add_subplot(gs[n+1, 3])
+im = ax.scatter(np.abs(Y_true_NTM[n, :, 0]).sum(axis=0), np.abs(Y_true_NTM[n, :, 1]).sum(axis=0))
+ax.set(xlabel='1st component', ylabel='2nd component', title='true obs')
+
+ax = fig.add_subplot(gs[n+1, 4])
+im = ax.scatter(np.abs(Y_NTM[n, :, 0]).sum(axis=0), np.abs(Y_NTM[n, :, 1]).sum(axis=0))
 fig.colorbar(im, ax=ax)
-ax.set(xlabel='time frame', ylabel='frequency', title='true logPSD x')
-
-ax = fig.add_subplot(gs[-1, 1])
-im = ax.imshow(np.log(lambda_NFT.sum(axis=0)), interpolation='nearest', origin='lower', aspect='auto')
-fig.colorbar(im, ax=ax)
-ax.set(xlabel='time frame', ylabel='frequency', title='est logPSD x')
-
-ax = fig.add_subplot(gs[-1, 2])
-im = ax.imshow(SM_NFP.sum(axis=0), interpolation='nearest', origin='lower', aspect='auto')
-fig.colorbar(im, ax=ax)
-ax.set(xlabel='directions', ylabel='frequency', title='spatial measure x')
-
-fig.align_labels()
-fig.subplots_adjust(wspace=0.2, hspace=0.7)
-plt.savefig("results.png", bbox_inches='tight', dpi=300)
+ax.set(xlabel='1st component', ylabel='2nd component', title='est obs')

@@ -342,7 +342,7 @@ class alpha_SpatialMNMF():
             Y_true_NTM = self.convert_to_NumpyArray(self.Y_true_NTM)
         np.savez(fileName, lambda_NT=lambda_NT,
                  lambda_true_NT=lambda_true_NT,
-                 SM_NFP=SM_NP, Y_true_NTM=Y_true_NTM,
+                 SM_NP=SM_NP, Y_true_NTM=Y_true_NTM,
                  Y_NTM=Y_NTM)
 
     def solve(self, n_iteration=100, save_likelihood=False, save_parameter=False, save_wav=False, save_path="./", interval_save_parameter=30):
