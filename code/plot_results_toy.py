@@ -11,19 +11,19 @@ it = 500
 S = 2
 M = 2
 K = 32
-init = "circ"
+init = "ones"
 EST_DIR_A = "/home/mafontai/Documents/project/git_project/speech_separation/alpha_SpatialMNMF/results_2toy/dev/"
 SAVE_PATH_A = os.path.join(EST_DIR_A, "alpha=%s" % str(HYP), "beta=%s" % str(BETA))
-file_path = os.path.join(SAVE_PATH_A, "alpha_SpatialMNMF-likelihood-interval=10-M={}-S={}-it={}-init={}-rand=1-ID=0.pic").format(str(M), str(S), str(it), init)
+file_path = os.path.join(SAVE_PATH_A, "alpha_SpatialMNMF-likelihood-interval=10-M={}-S={}-it={}-init={}-rand=1-ID=test.pic").format(str(M), str(S), str(it), init)
 data_likelihood =  pic.load(open(file_path, 'rb'))
 li_it = np.arange(1, it + 1, 10)
 
-file_path = os.path.join(SAVE_PATH_A, "alpha_SpatialMNMF-parameters-M={}-S={}-it={}-K={}-init={}-rand=1-ID=0.npz").format(str(M), str(S), str(it), str(K), init)
+file_path = os.path.join(SAVE_PATH_A, "alpha_SpatialMNMF-parameters-M={}-S={}-it={}-init={}-rand=1-ID=test.npz").format(str(M), str(S), str(it), init)
 file = np.load(file_path)
 
 lambda_NT = file['lambda_NT']
 lambda_true_NT = file['lambda_true_NT']
-SM_NP = file['SM_NFP']
+SM_NP = file['SM_NP']
 Y_true_NTM = file['Y_true_NTM']
 Y_NTM = file['Y_NTM']
 
@@ -64,28 +64,30 @@ for n in range(S):
 
     ax = fig.add_subplot(gs[n+1, 4])
     im = ax.scatter(np.abs(Y_NTM[n, :, 0]), np.abs(Y_NTM[n, :, 1]))
-    fig.colorbar(im, ax=ax)
     ax.set(xlabel='1st component', ylabel='2nd component', title='est x{}'.format(n+1))
 
 
 
-ax = fig.add_subplot(gs[n+1, 0])
+ax = fig.add_subplot(gs[-1, 0])
 im = ax.plot(lambda_true_NT.sum(axis=0))
 ax.set(xlabel='sample', ylabel='value', title='true lambda obs')
 
-ax = fig.add_subplot(gs[n+1, 1])
+ax = fig.add_subplot(gs[-1, 1])
 im = ax.plot(lambda_NT.sum(axis=0))
 ax.set(xlabel='sample', ylabel='value', title='est lambda obs')
 
-ax = fig.add_subplot(gs[n+1, 2])
+ax = fig.add_subplot(gs[-1, 2])
 im = ax.plot(SM_NP.sum(axis=0))
 ax.set(xlabel='directions', ylabel='value', title='spatial measure obs')
 
-ax = fig.add_subplot(gs[n+1, 3])
-im = ax.scatter(np.abs(Y_true_NTM[n, :, 0]).sum(axis=0), np.abs(Y_true_NTM[n, :, 1]).sum(axis=0))
+ax = fig.add_subplot(gs[-1, 3])
+im = ax.scatter(np.abs(Y_true_NTM[..., 0]).sum(axis=0), np.abs(Y_true_NTM[..., 1]).sum(axis=0))
 ax.set(xlabel='1st component', ylabel='2nd component', title='true obs')
 
-ax = fig.add_subplot(gs[n+1, 4])
-im = ax.scatter(np.abs(Y_NTM[n, :, 0]).sum(axis=0), np.abs(Y_NTM[n, :, 1]).sum(axis=0))
-fig.colorbar(im, ax=ax)
+ax = fig.add_subplot(gs[-1, 4])
+im = ax.scatter(np.abs(Y_NTM[..., 0]).sum(axis=0), np.abs(Y_NTM[..., 1]).sum(axis=0))
 ax.set(xlabel='1st component', ylabel='2nd component', title='est obs')
+
+fig.align_labels()
+fig.subplots_adjust(wspace=0.2, hspace=0.7)
+plt.savefig("results_toy.png", bbox_inches='tight', dpi=300)

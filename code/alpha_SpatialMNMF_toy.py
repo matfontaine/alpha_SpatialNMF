@@ -124,7 +124,7 @@ class alpha_SpatialMNMF():
         Cste /= self.n_Th
 
         for n in range(self.n_source):  # Dirac assumption
-            self.SM_true_NP[n, int(self.n_Th / (self.n_source + 2))] = 1.
+            self.SM_true_NP[n, int(self.n_Th / (n + 2))] = 1.
             for dP in range(self.n_Th):
                 S_NTP[n, :, dP] = self.alpha_sampling(alpha=self.alpha, beta=0,
                                                       mu=0, sigma=self.SM_true_NP[n, dP],
@@ -135,14 +135,14 @@ class alpha_SpatialMNMF():
                                                     S_NTP[n, :, :, None], axis=-2)
     def compute_Theta_Oracle(self):  # Nearfield region assumption and Spatial measure = Diracs
         data = loadmat("rir_info.mat")
-        index = 5000
+        index = 5000 + 4
         mic_pos = data['INFO'][0][index]['mic_pos'][:self.n_mic]
         spk_pos = data['INFO'][0][index]['spk_pos'][:self.n_source]
         self.Theta_PM = self.xp.zeros((self.n_Th, self.n_mic)).astype(complex)
         r_PM = self.xp.zeros((self.n_Th, self.n_mic)).astype(float)
         for m in range(self.n_mic):
             for n in range(self.n_source):
-                r_PM[n, m] = self.xp.linalg.norm(spk_pos[n] - mic_pos[m])
+                r_PM[int(self.n_Th / (n + 2)), m] = self.xp.linalg.norm(spk_pos[n] - mic_pos[m])
 
         for p in range(self.n_source, self.n_Th):
             r_PM[p, :] = self.xp.abs(self.rand_s.rand(self.n_mic)) + 0.5
@@ -269,8 +269,8 @@ class alpha_SpatialMNMF():
 
         mu_NF = (self.G_NP).sum(axis=-1)
         self.G_NP = self.G_NP / mu_NF[..., None]
-        self.lambda_NT = self.lambda_NT * mu_N[:, None]
 
+        self.lambda_NT /= self.xp.linalg.norm(self.lambda_NT, axis=-1, keepdims=True)
         self.reset_variable()
 
     def E_Step(self):
@@ -306,8 +306,8 @@ class alpha_SpatialMNMF():
         Mask_NTMM = (self.lambda_NT[..., None, None, None] *\
                       self.Xi_TMMP[None] *\
                       self.SM_NP[:, None, None, None]).sum(axis=-1)
-        # Mask_NFTMM *= 2. * self.xp.pi ** (self.n_mic) / np.math.factorial(self.n_mic)
-        # Mask_NFTMM /= self.n_Th
+        Mask_NTMM *= 2. * self.xp.pi ** (self.n_mic) / np.math.factorial(self.n_mic)
+        Mask_NTMM /= self.n_Th
         self.Y_NTM = (Mask_NTMM * self.X_TM[None, :, None]).sum(axis=-1)
 
 
