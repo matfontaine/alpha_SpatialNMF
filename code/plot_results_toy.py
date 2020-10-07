@@ -47,45 +47,47 @@ ax.set(xlabel='number of iterations', ylabel='beta_div', title='beta-divergence 
 
 for n in range(S):
     ax = fig.add_subplot(gs[n+1, 0])
-    im = ax.plot(lambda_true_NT[n])
+    ax.plot(lambda_true_NT[n])
     ax.set(xlabel='sample', ylabel='value', title='true lambda s{}'.format(n+1))
 
     ax = fig.add_subplot(gs[n+1, 1])
-    im = ax.plot(lambda_NT[n])
+    ax.plot(lambda_NT[n])
     ax.set(xlabel='sample', ylabel='value', title='est lambda s{}'.format(n+1))
 
     ax = fig.add_subplot(gs[n+1, 2])
-    im = ax.plot(SM_NP[n])
+    ax.plot(SM_NP[n])
     ax.set(xlabel='directions', ylabel='value', title='spatial measure s{}'.format(n+1))
 
     ax = fig.add_subplot(gs[n+1, 3])
-    im = ax.scatter(np.abs(Y_true_NTM[n, :, 0]), np.abs(Y_true_NTM[n, :, 1]))
+    ax.scatter(np.abs(Y_true_NTM[n, :, 0]), np.abs(Y_true_NTM[n, :, 1]))
+    ax.scatter(np.abs(Y_NTM[n, :, 0]), np.abs(Y_NTM[n, :, 1]))
     ax.set(xlabel='1st component', ylabel='2nd component', title='true x{}'.format(n+1))
 
     ax = fig.add_subplot(gs[n+1, 4])
-    im = ax.scatter(np.abs(Y_NTM[n, :, 0]), np.abs(Y_NTM[n, :, 1]))
+    ax.scatter(np.abs(Y_true_NTM[n, :, 0]), np.abs(Y_true_NTM[n, :, 1]))
+    ax.scatter(np.abs(Y_NTM[n, :, 0]), np.abs(Y_NTM[n, :, 1]))
     ax.set(xlabel='1st component', ylabel='2nd component', title='est x{}'.format(n+1))
 
 
 
 ax = fig.add_subplot(gs[-1, 0])
-im = ax.plot(lambda_true_NT.sum(axis=0))
+ax.plot(lambda_true_NT.sum(axis=0))
 ax.set(xlabel='sample', ylabel='value', title='true lambda obs')
 
 ax = fig.add_subplot(gs[-1, 1])
-im = ax.plot(lambda_NT.sum(axis=0))
+ax.plot(lambda_NT.sum(axis=0))
 ax.set(xlabel='sample', ylabel='value', title='est lambda obs')
 
 ax = fig.add_subplot(gs[-1, 2])
-im = ax.plot(SM_NP.sum(axis=0))
+ax.plot(SM_NP.sum(axis=0))
 ax.set(xlabel='directions', ylabel='value', title='spatial measure obs')
 
 ax = fig.add_subplot(gs[-1, 3])
-im = ax.scatter(np.abs(Y_true_NTM[..., 0]).sum(axis=0), np.abs(Y_true_NTM[..., 1]).sum(axis=0))
+ax.scatter(np.abs(Y_true_NTM[..., 0]).sum(axis=0), np.abs(Y_true_NTM[..., 1]).sum(axis=0))
 ax.set(xlabel='1st component', ylabel='2nd component', title='true obs')
 
 ax = fig.add_subplot(gs[-1, 4])
-im = ax.scatter(np.abs(Y_NTM[..., 0]).sum(axis=0), np.abs(Y_NTM[..., 1]).sum(axis=0))
+ax.scatter(np.abs(Y_NTM[..., 0]).sum(axis=0), np.abs(Y_NTM[..., 1]).sum(axis=0))
 ax.set(xlabel='1st component', ylabel='2nd component', title='est obs')
 
 fig.align_labels()
