@@ -5,9 +5,9 @@ import sys, os
 import numpy as np
 import math as math
 
-HYP = 1.4
+HYP = 1.8
 BETA = 0.0
-it = 500
+it = 5000
 S = 2
 M = 2
 K = 32
@@ -24,6 +24,7 @@ file = np.load(file_path)
 lambda_NT = file['lambda_NT']
 lambda_true_NT = file['lambda_true_NT']
 SM_NP = file['SM_NP']
+SM_true_NP = file['SM_true_NP']
 Y_true_NTM = file['Y_true_NTM']
 Y_NTM = file['Y_NTM']
 
@@ -37,7 +38,7 @@ fig_size = np.array([(S + 2) * fig_width, 3. * fig_height])
 
 
 fig = plt.figure(tight_layout=True, figsize=fig_size)
-gs = gridspec.GridSpec(nrows=S + 2, ncols=5)
+gs = gridspec.GridSpec(nrows=S + 2, ncols=4)
 
 
 # beta divergence
@@ -55,19 +56,16 @@ for n in range(S):
     ax.set(xlabel='sample', ylabel='value', title='est lambda s{}'.format(n+1))
 
     ax = fig.add_subplot(gs[n+1, 2])
-    ax.plot(SM_NP[n])
+    ax.plot(SM_NP[n], label='est spatial measure s{}'.format(n+1))
+    ax.plot(SM_true_NP[n], label='true spatial measure s{}'.format(n+1))
+    ax.legend()
     ax.set(xlabel='directions', ylabel='value', title='spatial measure s{}'.format(n+1))
 
     ax = fig.add_subplot(gs[n+1, 3])
-    ax.scatter(np.abs(Y_true_NTM[n, :, 0]), np.abs(Y_true_NTM[n, :, 1]))
-    ax.scatter(np.abs(Y_NTM[n, :, 0]), np.abs(Y_NTM[n, :, 1]))
-    ax.set(xlabel='1st component', ylabel='2nd component', title='true x{}'.format(n+1))
-
-    ax = fig.add_subplot(gs[n+1, 4])
-    ax.scatter(np.abs(Y_true_NTM[n, :, 0]), np.abs(Y_true_NTM[n, :, 1]))
-    ax.scatter(np.abs(Y_NTM[n, :, 0]), np.abs(Y_NTM[n, :, 1]))
-    ax.set(xlabel='1st component', ylabel='2nd component', title='est x{}'.format(n+1))
-
+    ax.scatter(np.abs(Y_true_NTM[n, :, 0]), np.abs(Y_true_NTM[n, :, 1]), label='true x{}'.format(n+1))
+    ax.scatter(np.abs(Y_NTM[n, :, 0]), np.abs(Y_NTM[n, :, 1]), label='est x{}'.format(n+1))
+    ax.legend()
+    ax.set(xlabel='1st component', ylabel='2nd component', title='true and est x{}'.format(n+1))
 
 
 ax = fig.add_subplot(gs[-1, 0])
@@ -79,16 +77,17 @@ ax.plot(lambda_NT.sum(axis=0))
 ax.set(xlabel='sample', ylabel='value', title='est lambda obs')
 
 ax = fig.add_subplot(gs[-1, 2])
-ax.plot(SM_NP.sum(axis=0))
+ax.plot(SM_true_NP.sum(axis=0), label='true obs')
+ax.plot(SM_NP.sum(axis=0), label='est obs')
+ax.legend()
 ax.set(xlabel='directions', ylabel='value', title='spatial measure obs')
 
 ax = fig.add_subplot(gs[-1, 3])
-ax.scatter(np.abs(Y_true_NTM[..., 0]).sum(axis=0), np.abs(Y_true_NTM[..., 1]).sum(axis=0))
-ax.set(xlabel='1st component', ylabel='2nd component', title='true obs')
+ax.scatter(np.abs(Y_true_NTM[..., 0]).sum(axis=0), np.abs(Y_true_NTM[..., 1]).sum(axis=0), label='true obs')
+ax.scatter(np.abs(Y_NTM[..., 0]).sum(axis=0), np.abs(Y_NTM[..., 1]).sum(axis=0), label='est obs')
+ax.legend()
+ax.set(xlabel='1st component', ylabel='2nd component', title='true and est obs')
 
-ax = fig.add_subplot(gs[-1, 4])
-ax.scatter(np.abs(Y_NTM[..., 0]).sum(axis=0), np.abs(Y_NTM[..., 1]).sum(axis=0))
-ax.set(xlabel='1st component', ylabel='2nd component', title='est obs')
 
 fig.align_labels()
 fig.subplots_adjust(wspace=0.2, hspace=0.7)

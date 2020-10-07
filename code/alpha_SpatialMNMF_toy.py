@@ -37,6 +37,7 @@ class alpha_SpatialMNMF():
         self.alpha = alpha # characteristic exponent
         self.n_mic = n_mic
         self.n_sample = n_sample
+        self.delta_T = 1 # average time horizon
         self.l1 = 0.0  # l1 regularization
         self.beta = beta # beta divergence
         if self.beta < 1.:
@@ -117,7 +118,7 @@ class alpha_SpatialMNMF():
 
     def compute_sampling(self):
         self.SM_true_NP = self.xp.zeros((self.n_source, self.n_Th)).astype(self.xp.float32)  # (N, P)
-        self.lambda_true_NT = self.rand_s.rand(self.n_source, self.n_sample)
+        self.lambda_true_NT = self.xp.abs(self.rand_s.rand(self.n_source, self.n_sample))
         S_NTP = self.xp.zeros((self.n_source, self.n_sample, self.n_Th)).astype(self.xp.float32)  # sources (N, T, P)
         self.Y_true_NTM = self.xp.zeros((self.n_source, self.n_sample, self.n_mic)).astype(self.xp.float32)  # img_sources (N, T, M)
         Cste = float(2. * self.xp.pi ** (self.n_mic) / np.math.factorial(self.n_mic))
@@ -132,7 +133,7 @@ class alpha_SpatialMNMF():
                                                       seed=self.seed)
                 S_NTP[n, :, dP] *= (self.lambda_true_NT[n] ** (1. / self.alpha))
             self.Y_true_NTM[n, ...] = Cste * np.sum(self.Theta_PM[None, ...] *
-                                                    S_NTP[n, :, :, None], axis=-2)
+                                                S_NTP[n, :, :, None], axis=-2)
     def compute_Theta_Oracle(self):  # Nearfield region assumption and Spatial measure = Diracs
         data = loadmat("rir_info.mat")
         index = 5000 + 4
@@ -188,8 +189,8 @@ class alpha_SpatialMNMF():
 
     def init_SMs(self):
         if "ones" == self.init_SM:
-            # self.SM_NP = self.xp.ones((self.n_source, self.n_Th)).astype(self.xp.float)
-            self.SM_NP = self.xp.abs(self.rand_s.rand(self.n_source, self.n_Th)).astype(self.xp.float)
+            self.SM_NP = self.xp.ones((self.n_source, self.n_Th)).astype(self.xp.float)
+            # self.SM_NP = self.xp.abs(self.rand_s.rand(self.n_source, self.n_Th)).astype(self.xp.float)
         elif "circ" == self.init_SM:
             self.SM_NP =  self.xp.maximum(1e-2, self.xp.zeros([self.n_source, self.n_Th], dtype=self.xp.float))
             for p in range(self.n_Th):
@@ -254,23 +255,28 @@ class alpha_SpatialMNMF():
         """
         eps = 1e-10
 
-        ThX = self.xp.real((self.Theta_PM[None].conj() * self.X_TM[:, None]).sum(axis=-1))  # F x T x P
-        Chf = self.xp.cos(ThX)  # F x T x P
+        ThX = self.xp.real((self.Theta_PM[None].conj() * self.X_TM[:, None]).sum(axis=-1))  # T x P
+        Chf = self.xp.cos(ThX)  #  T x P
 
-        self.X_TP = - self.xp.log(self.xp.abs(Chf))
+        # self.X_TP = self.xp.zeros_like(Chf)
+        # for p in range(self.n_Th):
+        #     self.X_TP[:, p] = self.xp.convolve(self.xp.ones(self.delta_T)/self.delta_T,
+        #                                            Chf[:, p],
+        #                                            mode="same")
+        self.X_TP = - self.xp.log(self.xp.abs(Chf).mean(axis=0))[None] * self.xp.ones((self.n_sample, self.n_Th))
 
     def normalize(self):
         # self.W_NFK = self.W_NFK / phi_F[None, :, None]
 
-        mu_N = (self.SM_NP).sum(axis=-1)
-        self.SM_NP = self.SM_NP / mu_N[:, None]
+
+        self.SM_NP /= self.xp.linalg.norm(self.SM_NP, axis=-1, keepdims=True)
 
         self.G_NP = (self.Psi_PP[None, ...] * self.SM_NP[:, None, :]).sum(axis=-1)
 
         mu_NF = (self.G_NP).sum(axis=-1)
         self.G_NP = self.G_NP / mu_NF[..., None]
 
-        self.lambda_NT /= self.xp.linalg.norm(self.lambda_NT, axis=-1, keepdims=True)
+        self.lambda_NT /= self.xp.linalg.norm(self.lambda_NT, axis=0, keepdims=True)
         self.reset_variable()
 
     def E_Step(self):
@@ -336,13 +342,14 @@ class alpha_SpatialMNMF():
     def save_parameter(self, fileName):
         if self.xp != np:
             lambda_NT = self.convert_to_NumpyArray(self.lambda_NT)
-            SM_NP = self.convert_to_NumpyArray(self.SM_NP)
             lambda_true_NT = self.convert_to_NumpyArray(self.lambda_true_NT)
+            SM_NP = self.convert_to_NumpyArray(self.SM_NP)
+            SM_true_NP = self.convert_to_NumpyArray(self.SM_true_NP)
             Y_NTM = self.convert_to_NumpyArray(self.Y_NTM)
             Y_true_NTM = self.convert_to_NumpyArray(self.Y_true_NTM)
         np.savez(fileName, lambda_NT=lambda_NT,
                  lambda_true_NT=lambda_true_NT,
-                 SM_NP=SM_NP, Y_true_NTM=Y_true_NTM,
+                 SM_NP=SM_NP, SM_true_NP = SM_true_NP, Y_true_NTM=Y_true_NTM,
                  Y_NTM=Y_NTM)
 
     def solve(self, n_iteration=100, save_likelihood=False, save_parameter=False, save_wav=False, save_path="./", interval_save_parameter=30):
