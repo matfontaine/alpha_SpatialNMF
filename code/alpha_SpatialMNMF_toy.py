@@ -188,8 +188,8 @@ class alpha_SpatialMNMF():
 
     def init_SMs(self):
         if "ones" == self.init_SM:
-            self.SM_NP = self.xp.ones((self.n_source, self.n_Th)).astype(self.xp.float)
-            # self.SM_NFP = self.rand_s.rand(self.n_source, self.n_freq, self.n_Th)
+            # self.SM_NP = self.xp.ones((self.n_source, self.n_Th)).astype(self.xp.float)
+            self.SM_NP = self.xp.abs(self.rand_s.rand(self.n_source, self.n_Th)).astype(self.xp.float)
         elif "circ" == self.init_SM:
             self.SM_NP =  self.xp.maximum(1e-2, self.xp.zeros([self.n_source, self.n_Th], dtype=self.xp.float))
             for p in range(self.n_Th):
@@ -289,7 +289,7 @@ class alpha_SpatialMNMF():
         # self.lambda_NFT = self.xp.array(lambda_true_NFT)
         self.Y_TP = (self.lambda_NT[..., None] * self.G_NP[:, None]).sum(axis=0)
         # Numerator
-        ThTh_alpha = self.ThTh_PP * (self.xp.abs(self.ThTh_PP) ** (self.alpha - 2.))  # P x P'
+        ThTh_alpha = self.ThTh_PP.conj() * (self.xp.abs(self.ThTh_PP) ** (self.alpha - 2.))  # P x P'
         temp_num = ThTh_alpha[None] / (self.Y_TP[:, None, :] ** (2 * self.n_mic/self.alpha + 1.))  # T x P x P'
 
         # T x  P x P' x M
