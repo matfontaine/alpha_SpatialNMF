@@ -134,7 +134,7 @@ class alpha_SpatialMNMF():
                 S_NTP[n, :, dP] *= (self.lambda_true_NT[n] ** (1. / self.alpha))
             self.Y_true_NTM[n, ...] = Cste * np.sum(self.Theta_PM[None, ...] *
                                                 S_NTP[n, :, :, None], axis=-2)
-    def compute_Theta_Oracle(self):  # Nearfield region assumption and Spatial measure = Diracs
+    def compute_Theta_Nearfield(self):  # Nearfield region assumption and Spatial measure = Diracs
         data = loadmat("rir_info.mat")
         index = 5000 + 4
         mic_pos = data['INFO'][0][index]['mic_pos'][:self.n_mic]
@@ -158,6 +158,18 @@ class alpha_SpatialMNMF():
                                  r_PM / c)
         self.Theta_PM /= self.xp.linalg.norm(self.Theta_PM, axis=-1, keepdims=True)
 
+    def compute_Theta_Sphere_Sampling(self):
+        nTheta = int(self.xp.sqrt(self.n_Th)/2)
+        nPhi = int(2 * self.xp.sqrt(self.n_Th))
+        theta = self.xp.linspace(0, np.pi/2, num=nTheta)
+        phi = self.xp.linspace(0, 2*np.pi, num=nPhi, endpoint=False)
+        Theta, Phi = self.xp.meshgrid(theta, phi)
+
+        Sampling_C = self.xp.stack((self.xp.sin(Theta)*self.xp.exp(1j*Phi),
+                                    self.xp.cos(Theta)), axis=2)
+        import ipdb; ipdb.set_trace()
+        self.Theta_PM = self.xp.reshape(Sampling_C, (nPhi * nTheta, 2))
+
     def init_variable(self):
         # hypersphere sampling
         # self.Theta_FPM = self.rand_s.normal(0, 1, size=(self.n_Th, self.n_mic)) +\
@@ -166,7 +178,7 @@ class alpha_SpatialMNMF():
 
         # auxiliary spatial variables
         # P x P' x M
-        self.compute_Theta_Oracle()
+        self.compute_Theta_Sphere_Sampling()
         self.compute_sampling()
         self.X_TM = self.Y_true_NTM.sum(axis=0)
         self.ThTh_PP = (self.Theta_PM.conj()[:, None] * self.Theta_PM[None]).sum(axis=-1)  # F x P x P'
@@ -192,7 +204,7 @@ class alpha_SpatialMNMF():
             self.SM_NP = self.xp.ones((self.n_source, self.n_Th)).astype(self.xp.float)
             # self.SM_NP = self.xp.abs(self.rand_s.rand(self.n_source, self.n_Th)).astype(self.xp.float)
         elif "circ" == self.init_SM:
-            self.SM_NP =  self.xp.maximum(1e-2, self.xp.zeros([self.n_source, self.n_Th], dtype=self.xp.float))
+            self.SM_NP = self.xp.maximum(1e-2, self.xp.zeros([self.n_source, self.n_Th], dtype=self.xp.float))
             for p in range(self.n_Th):
                 self.SM_NP[p % self.n_source, p] = 1
         else:
@@ -273,8 +285,8 @@ class alpha_SpatialMNMF():
 
         self.G_NP = (self.Psi_PP[None, ...] * self.SM_NP[:, None, :]).sum(axis=-1)
 
-        mu_NF = (self.G_NP).sum(axis=-1)
-        self.G_NP = self.G_NP / mu_NF[..., None]
+        # mu_NF = (self.G_NP).sum(axis=-1)
+        # self.G_NP = self.G_NP / mu_NF[..., None]
 
         self.lambda_NT /= self.xp.linalg.norm(self.lambda_NT, axis=0, keepdims=True)
         self.reset_variable()
@@ -295,7 +307,7 @@ class alpha_SpatialMNMF():
         # self.lambda_NFT = self.xp.array(lambda_true_NFT)
         self.Y_TP = (self.lambda_NT[..., None] * self.G_NP[:, None]).sum(axis=0)
         # Numerator
-        ThTh_alpha = self.ThTh_PP.conj() * (self.xp.abs(self.ThTh_PP) ** (self.alpha - 2.))  # P x P'
+        ThTh_alpha = self.ThTh_PP * (self.xp.abs(self.ThTh_PP) ** (self.alpha - 2.))  # P x P'
         temp_num = ThTh_alpha[None] / (self.Y_TP[:, None, :] ** (2 * self.n_mic/self.alpha + 1.))  # T x P x P'
 
         # T x  P x P' x M
@@ -306,7 +318,7 @@ class alpha_SpatialMNMF():
 
         # first T P M M
         self.Xi_TMMP = self.n_mic * (self.Theta_PM[None, :, None] *
-                                      (Num/Den[..., None, None])[..., None].conj()).transpose(0, 2, 3, 1)
+                                      (Num/Den[..., None, None])[..., None].conj()).transpose(0, 3, 2, 1)
 
         # N T M M P
         Mask_NTMM = (self.lambda_NT[..., None, None, None] *\
@@ -314,6 +326,7 @@ class alpha_SpatialMNMF():
                       self.SM_NP[:, None, None, None]).sum(axis=-1)
         Mask_NTMM *= 2. * self.xp.pi ** (self.n_mic) / np.math.factorial(self.n_mic)
         Mask_NTMM /= self.n_Th
+        import ipdb; ipdb.set_trace()
         self.Y_NTM = (Mask_NTMM * self.X_TM[None, :, None]).sum(axis=-1)
 
 
@@ -349,7 +362,7 @@ class alpha_SpatialMNMF():
             Y_true_NTM = self.convert_to_NumpyArray(self.Y_true_NTM)
         np.savez(fileName, lambda_NT=lambda_NT,
                  lambda_true_NT=lambda_true_NT,
-                 SM_NP=SM_NP, SM_true_NP = SM_true_NP, Y_true_NTM=Y_true_NTM,
+                 SM_NP=SM_NP, SM_true_NP=SM_true_NP, Y_true_NTM=Y_true_NTM,
                  Y_NTM=Y_NTM)
 
     def solve(self, n_iteration=100, save_likelihood=False, save_parameter=False, save_wav=False, save_path="./", interval_save_parameter=30):

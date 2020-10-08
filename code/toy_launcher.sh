@@ -1,7 +1,7 @@
 N_ITER=5000
 N_INTER=10
 N_SAMPLE=200
-N_THETA=60
+N_THETA=64
 INIT="ones"
 
 for ALPHA in 1.8; do for N_MIC in 2; do for BETA in 0.0; do for SOURCE in 2; do for SEED in $(seq 1)
