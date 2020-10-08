@@ -87,6 +87,8 @@ ax.scatter(np.abs(Y_NTM[..., 0]).sum(axis=0), np.abs(Y_NTM[..., 1]).sum(axis=0),
 ax.legend()
 ax.set(xlabel='1st component', ylabel='2nd component', title='true and est obs')
 
+print("{} % of Spatial Measure accuracy error".format(100. * (np.abs(SM_true_NP-SM_NP) / np.abs(SM_true_NP+ 1e-14)).mean()))
+print("{} % of PSD accuracy error".format(100. * (np.abs(lambda_true_NT-lambda_NT) / np.abs(lambda_true_NT)).mean()))
 print("{} % of accuracy error".format(100. * (np.abs(Y_true_NTM-Y_NTM) / np.abs(Y_true_NTM)).mean()))
 import ipdb; ipdb.set_trace()
 fig.align_labels()

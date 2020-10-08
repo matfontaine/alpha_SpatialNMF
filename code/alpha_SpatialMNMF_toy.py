@@ -315,7 +315,7 @@ class alpha_SpatialMNMF():
         if self.xp == "cp":
             InvP_NTMMM = self.xp.array(InvP_NTMMM)
             Inv_TMMM = self.xp.array(Inv_TMMM)
-        Id_TMM = self.xp.ones((self.n_sample, self.n_mic, self.n_mic)) * (self.xp.eye(self.n_mic)/self.n_source)[None]
+        Id_TMM = self.xp.ones((self.n_sample, self.n_mic, self.n_mic)) * (self.xp.eye(self.n_mic))[None]
         self.La_TMM += (Inv_TMMM * (self.W_NTMM.sum(axis=0) - Id_TMM)[:, :, None]).sum(axis=-1)
 
     def update_W(self):
@@ -333,18 +333,19 @@ class alpha_SpatialMNMF():
 
 
     def E_Step_cov(self):
-        self.nE_it = 800
+        self.nE_it = 80
         # Init variables
         self.W_NTMM = self.xp.ones((self.n_source, self.n_sample, self.n_mic, self.n_mic)).astype(self.xp.complex)
         self.W_NTMM *= (self.xp.eye(self.n_mic)/self.n_source)[None, None]
+        import ipdb; ipdb.set_trace()
         self.La_TMM = self.xp.zeros((self.n_sample, self.n_mic, self.n_mic)).astype(self.xp.complex)
         self.P_NTMMM = self.rand_s.rand(self.n_source, self.n_sample, self.n_mic, self.n_mic, self.n_mic).astype(self.xp.complex)
         self.ThTh_MMP = (self.Theta_PM.T[None] * self.Theta_PM.T.conj()[:, None])
-
         for it in range(self.nE_it):
             self.update_P()
             self.update_Lagrange()
             self.update_W()
+        import ipdb; ipdb.set_trace()
         self.Y_NTM = (self.W_NTMM.conj() * self.X_TM[None, :, None]).sum(axis=-1)
 
     def E_Step_linear(self):
@@ -382,7 +383,6 @@ class alpha_SpatialMNMF():
                       self.SM_NP[:, None, None, None]).sum(axis=-1)
         Mask_NTMM *= 2. * self.xp.pi ** (self.n_mic) / np.math.factorial(self.n_mic)
         Mask_NTMM /= self.n_Th
-        import ipdb; ipdb.set_trace()
         self.Y_NTM = (Mask_NTMM * self.X_TM[None, :, None]).sum(axis=-1)
 
 
@@ -477,7 +477,7 @@ class alpha_SpatialMNMF():
             self.save_separated_signal(save_path+"{}-{}-{}".format(self.method_name, self.filename_suffix, it + 1))
 
         # separation of alpha-stable random vector
-        self.E_Step_linear()
+        self.E_Step_cov()
         if save_parameter:
             self.save_parameter(save_path + "{}-parameters-{}.npz".format(self.method_name, self.filename_suffix))
 
