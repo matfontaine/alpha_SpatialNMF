@@ -120,7 +120,7 @@ class alpha_SpatialMNMF():
         self.SM_true_NP = self.xp.zeros((self.n_source, self.n_Th)).astype(self.xp.float32)  # (N, P)
         self.lambda_true_NT = self.xp.abs(self.rand_s.rand(self.n_source, self.n_sample))
         S_NTP = self.xp.zeros((self.n_source, self.n_sample, self.n_Th)).astype(self.xp.float32)  # sources (N, T, P)
-        self.Y_true_NTM = self.xp.zeros((self.n_source, self.n_sample, self.n_mic)).astype(self.xp.float32)  # img_sources (N, T, M)
+        self.Y_true_NTM = self.xp.zeros((self.n_source, self.n_sample, self.n_mic)).astype(self.xp.complex)  # img_sources (N, T, M)
         Cste = float(2. * self.xp.pi ** (self.n_mic) / np.math.factorial(self.n_mic))
         Cste /= self.n_Th
 
@@ -178,7 +178,7 @@ class alpha_SpatialMNMF():
 
         # auxiliary spatial variables
         # P x P' x M
-        self.compute_Theta_Sphere_Sampling()
+        self.compute_Theta_Nearfield()
         self.compute_sampling()
         self.X_TM = self.Y_true_NTM.sum(axis=0)
         self.ThTh_PP = (self.Theta_PM.conj()[:, None] * self.Theta_PM[None]).sum(axis=-1)  # F x P x P'
@@ -291,7 +291,65 @@ class alpha_SpatialMNMF():
         self.lambda_NT /= self.xp.linalg.norm(self.lambda_NT, axis=0, keepdims=True)
         self.reset_variable()
 
-    def E_Step(self):
+    def update_P(self):
+        #  N T "M" P M
+        Cste = float(4 * self.xp.pi / self.n_Th)  # integration constant
+        WTh_NTMP = (self.W_NTMM[..., None].conj() *
+                    self.Theta_PM.T[None, None, None]).sum(axis=-2)
+        # N T "M" M M P
+        tmpI1_1 = (self.ThTh_MMP[None, None, None] *\
+              (self.Theta_PM.T[None, None, :, None, None] - WTh_NTMP[:, :, :, None, None]) ** (self.alpha - 2.))
+        tmpI1_2 = (self.ThTh_MMP[None, None, None] *\
+              (self.Theta_PM.T[None, None, :, None, None] - WTh_NTMP[:, :, :, None, None]) ** (self.alpha - 2.))
+        I1 = tmpI1_1 - tmpI1_2
+        I1 *= self.lambda_NT[..., None, None, None, None]
+        I1 *= self.SM_NP[:, None, None, None, None]
+        cov_NTP = self.lambda_NT[..., None] * self.SM_NP[:, None].sum(axis=0)
+        # N T "M" M M P
+        I2 = (self.ThTh_MMP[None, None, None] *\
+              (WTh_NTMP)[:, :, :, None, None] ** (self.alpha - 2.)) * cov_NTP[:, :, None, None, None]
+        self.P_NTMMM = Cste * (I1 + I2).sum(axis=-1)
+
+    def update_Lagrange(self):
+        InvP_NTMMM = np.linalg.inv(self.P_NTMMM)
+        Inv_TMMM = np.linalg.inv(InvP_NTMMM.sum(axis=0))
+        if self.xp == "cp":
+            InvP_NTMMM = self.xp.array(InvP_NTMMM)
+            Inv_TMMM = self.xp.array(Inv_TMMM)
+        Id_TMM = self.xp.ones((self.n_sample, self.n_mic, self.n_mic)) * (self.xp.eye(self.n_mic)/self.n_source)[None]
+        self.La_TMM += (Inv_TMMM * (self.W_NTMM.sum(axis=0) - Id_TMM)[:, :, None]).sum(axis=-1)
+
+    def update_W(self):
+        Cste = float(4 * self.xp.pi / self.n_Th)  # integration constant
+        WTh_NTMP = (self.W_NTMM[..., None].conj() *
+                    self.Theta_PM.T[None, None, None]).sum(axis=-2)
+        # N T M "M" P -> N T "M" M
+        R_NTMM = (self.ThTh_MMP[None, None] *\
+                (self.Theta_PM.T[None, None, None] - WTh_NTMP[:, :, None]) ** (self.alpha - 2.) *\
+                self.lambda_NT[..., None, None, None] * self.SM_NP[:, None, None, None]).sum(axis=-1).transpose(0, 1, 3, 2)
+
+        InvP_NTMMM = np.linalg.inv(self.P_NTMMM)
+        self.W_NTMM = (InvP_NTMMM * (Cste * R_NTMM[:, :, :, None] - self.La_TMM[None, :, :, None])).sum(axis=-1)
+
+
+
+    def E_Step_cov(self):
+        self.nE_it = 800
+        # Init variables
+        self.W_NTMM = self.xp.ones((self.n_source, self.n_sample, self.n_mic, self.n_mic)).astype(self.xp.complex)
+        self.W_NTMM *= (self.xp.eye(self.n_mic)/self.n_source)[None, None]
+        self.La_TMM = self.xp.zeros((self.n_sample, self.n_mic, self.n_mic)).astype(self.xp.complex)
+        self.P_NTMMM = self.rand_s.rand(self.n_source, self.n_sample, self.n_mic, self.n_mic, self.n_mic).astype(self.xp.complex)
+        self.ThTh_MMP = (self.Theta_PM.T[None] * self.Theta_PM.T.conj()[:, None])
+
+        for it in range(self.nE_it):
+            self.update_P()
+            self.update_Lagrange()
+            self.update_W()
+        import ipdb; ipdb.set_trace()
+        self.Y_NTM = (self.W_NTMM.conj() * self.X_TM[None, :, None]).sum(axis=-1)
+
+    def E_Step_linear(self):
         # self.SM_NFP[0, :, 0] = 1.
         # self.SM_NFP[1, :, 1] = 1.
         # self.SM_NFP[0, :, 1] = 1e-3
@@ -421,7 +479,7 @@ class alpha_SpatialMNMF():
             self.save_separated_signal(save_path+"{}-{}-{}".format(self.method_name, self.filename_suffix, it + 1))
 
         # separation of alpha-stable random vector
-        self.E_Step()
+        self.E_Step_cov()
         if save_parameter:
             self.save_parameter(save_path + "{}-parameters-{}.npz".format(self.method_name, self.filename_suffix))
 
