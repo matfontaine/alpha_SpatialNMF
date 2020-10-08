@@ -299,7 +299,7 @@ class alpha_SpatialMNMF():
         tmpI1_1 = (self.ThTh_MMP[None, None, None] *\
               (self.Theta_PM.T[None, None, :, None, None] - WTh_NTMP[:, :, :, None, None]) ** (self.alpha - 2.))
         tmpI1_2 = (self.ThTh_MMP[None, None, None] *\
-              (self.Theta_PM.T[None, None, :, None, None] - WTh_NTMP[:, :, :, None, None]) ** (self.alpha - 2.))
+              (WTh_NTMP[:, :, :, None, None]) ** (self.alpha - 2.))
         I1 = tmpI1_1 - tmpI1_2
         I1 *= self.lambda_NT[..., None, None, None, None]
         I1 *= self.SM_NP[:, None, None, None, None]
