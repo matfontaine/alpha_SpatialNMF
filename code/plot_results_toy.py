@@ -7,8 +7,8 @@ import math as math
 
 HYP = 1.8
 BETA = 0.0
-it = 2000
-S = 3
+it = 200
+S = 2
 M = 2
 init = "ones"
 EST_DIR_A = "/home/mafontai/Documents/project/git_project/speech_separation/alpha_SpatialMNMF/results_" + str(S) + "toy/dev/"
@@ -61,8 +61,8 @@ for n in range(S):
     ax.set(xlabel='directions', ylabel='value', title='spatial measure s{}'.format(n+1))
 
     ax = fig.add_subplot(gs[n+1, 3])
-    ax.scatter(np.abs(Y_NTM[n, :, 0]), np.abs(Y_NTM[n, :, 1]), label='est x{}'.format(n+1))
-    ax.scatter(np.abs(Y_true_NTM[n, :, 0]), np.abs(Y_true_NTM[n, :, 1]), label='true x{}'.format(n+1))
+    ax.scatter(np.abs(Y_true_NTM[n, :, 0]), np.abs(Y_true_NTM[n, :, 1]), label='true x{}'.format(n+1), alpha=0.5)
+    ax.scatter(np.abs(Y_NTM[n, :, 0]), np.abs(Y_NTM[n, :, 1]), label='est x{}'.format(n+1), alpha=0.5)
     ax.legend()
     ax.set(xlabel='1st component', ylabel='2nd component', title='true and est x{}'.format(n+1))
 
@@ -82,12 +82,13 @@ ax.legend()
 ax.set(xlabel='directions', ylabel='value', title='spatial measure obs')
 
 ax = fig.add_subplot(gs[-1, 3])
-ax.scatter(np.abs(Y_true_NTM[..., 0]).sum(axis=0), np.abs(Y_true_NTM[..., 1]).sum(axis=0), label='true obs')
-ax.scatter(np.abs(Y_NTM[..., 0]).sum(axis=0), np.abs(Y_NTM[..., 1]).sum(axis=0), label='est obs')
+ax.scatter(np.abs(Y_true_NTM[..., 0]).sum(axis=0), np.abs(Y_true_NTM[..., 1]).sum(axis=0), label='true obs', alpha=0.5)
+ax.scatter(np.abs(Y_NTM[..., 0]).sum(axis=0), np.abs(Y_NTM[..., 1]).sum(axis=0), label='est obs', alpha=0.5)
 ax.legend()
 ax.set(xlabel='1st component', ylabel='2nd component', title='true and est obs')
 
-
+print("{} % of accuracy error".format(100. * (np.abs(Y_true_NTM-Y_NTM) / np.abs(Y_true_NTM)).mean()))
+import ipdb; ipdb.set_trace()
 fig.align_labels()
 fig.subplots_adjust(wspace=0.2, hspace=0.7)
 plt.savefig("results_toy.png", bbox_inches='tight', dpi=300)

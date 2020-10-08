@@ -167,7 +167,6 @@ class alpha_SpatialMNMF():
 
         Sampling_C = self.xp.stack((self.xp.sin(Theta)*self.xp.exp(1j*Phi),
                                     self.xp.cos(Theta)), axis=2)
-        import ipdb; ipdb.set_trace()
         self.Theta_PM = self.xp.reshape(Sampling_C, (nPhi * nTheta, 2))
 
     def init_variable(self):
@@ -222,7 +221,8 @@ class alpha_SpatialMNMF():
         den_l = (self.Y_TP[None] ** (self.beta - 1.) *\
                  self.G_NP[:, None]).sum(axis=-1) + self.eps + self.l1
 
-        self.lambda_NT *= (num_l/den_l) ** self.e
+        # self.lambda_NT *= (num_l/den_l) ** self.e
+        self.lambda_NT = self.lambda_true_NT
         self.reset_variable()
 
     def update_SM(self):
@@ -234,6 +234,7 @@ class alpha_SpatialMNMF():
                   (self.Psi_PP[None] * (self.Y_TP[:, None] ** (self.beta -1.))).sum(axis=-1)[None]
                   ).sum(axis=1) + self.eps + self.l1
         self.SM_NP *= (num_SM / den_SM) ** self.e
+        self.SM_NP = self.SM_true_NP
 #        self.SM_NFP[0, :, 0] = 1.
 #        self.SM_NFP[1, :, 1] = 1.
 #        self.SM_NFP[0, :, 1] = 1e-3
@@ -270,25 +271,23 @@ class alpha_SpatialMNMF():
         ThX = self.xp.real((self.Theta_PM[None].conj() * self.X_TM[:, None]).sum(axis=-1))  # T x P
         Chf = self.xp.cos(ThX)  #  T x P
 
+        self.X_TP = - self.xp.log(self.xp.abs(Chf))
         # self.X_TP = self.xp.zeros_like(Chf)
         # for p in range(self.n_Th):
         #     self.X_TP[:, p] = self.xp.convolve(self.xp.ones(self.delta_T)/self.delta_T,
         #                                            Chf[:, p],
         #                                            mode="same")
-        self.X_TP = - self.xp.log(self.xp.abs(Chf).mean(axis=0))[None] * self.xp.ones((self.n_sample, self.n_Th))
+        # self.X_TP = - self.xp.log(self.xp.abs(Chf).mean(axis=0))[None] * self.xp.ones((self.n_sample, self.n_Th))
 
     def normalize(self):
         # self.W_NFK = self.W_NFK / phi_F[None, :, None]
-
-
-        self.SM_NP /= self.xp.linalg.norm(self.SM_NP, axis=-1, keepdims=True)
-
-        self.G_NP = (self.Psi_PP[None, ...] * self.SM_NP[:, None, :]).sum(axis=-1)
+        # self.SM_NP /= self.xp.linalg.norm(self.SM_NP, axis=-1, keepdims=True)
+        # self.G_NP = (self.Psi_PP[None, ...] * self.SM_NP[:, None, :]).sum(axis=-1)
 
         # mu_NF = (self.G_NP).sum(axis=-1)
         # self.G_NP = self.G_NP / mu_NF[..., None]
 
-        self.lambda_NT /= self.xp.linalg.norm(self.lambda_NT, axis=0, keepdims=True)
+        # self.lambda_NT /= self.xp.linalg.norm(self.lambda_NT, axis=0, keepdims=True)
         self.reset_variable()
 
     def update_P(self):
@@ -346,7 +345,6 @@ class alpha_SpatialMNMF():
             self.update_P()
             self.update_Lagrange()
             self.update_W()
-        import ipdb; ipdb.set_trace()
         self.Y_NTM = (self.W_NTMM.conj() * self.X_TM[None, :, None]).sum(axis=-1)
 
     def E_Step_linear(self):
@@ -479,7 +477,7 @@ class alpha_SpatialMNMF():
             self.save_separated_signal(save_path+"{}-{}-{}".format(self.method_name, self.filename_suffix, it + 1))
 
         # separation of alpha-stable random vector
-        self.E_Step_cov()
+        self.E_Step_linear()
         if save_parameter:
             self.save_parameter(save_path + "{}-parameters-{}.npz".format(self.method_name, self.filename_suffix))
 
