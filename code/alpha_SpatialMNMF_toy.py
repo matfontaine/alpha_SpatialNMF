@@ -228,13 +228,13 @@ class alpha_SpatialMNMF():
     def update_SM(self):
         # N x T x P
         num_SM = (self.lambda_NT[..., None] *\
-                  (self.Psi_PP[None] * self.X_TP[:, None]).sum(axis=-1)[None] *\
+                  (self.Psi_PP.T[None] * self.X_TP[:, None]).sum(axis=-1)[None] *\
                   self.Y_TP[None] ** (self.beta - 2.)).sum(axis=1)
         den_SM = (self.lambda_NT[..., None] *\
-                  (self.Psi_PP[None] * (self.Y_TP[:, None] ** (self.beta -1.))).sum(axis=-1)[None]
+                  (self.Psi_PP.T[None] * (self.Y_TP[:, None] ** (self.beta -1.))).sum(axis=-1)[None]
                   ).sum(axis=1) + self.eps + self.l1
         self.SM_NP *= (num_SM / den_SM) ** self.e
-        self.SM_NP = self.SM_true_NP
+        # self.SM_NP = self.SM_true_NP
 #        self.SM_NFP[0, :, 0] = 1.
 #        self.SM_NFP[1, :, 1] = 1.
 #        self.SM_NFP[0, :, 1] = 1e-3

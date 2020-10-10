@@ -108,7 +108,7 @@ with (the next result is true because of the Radon-Nikodym-Lebesgue theorem
  applied on a positive measure):
 \begin_inset Formula 
 \[
-\mathfrak{C}_{nft}\left(d\boldsymbol{\theta}\right)\triangleq\lambda_{nft}\Gamma_{nf}\left(d\boldsymbol{\theta}\right)\triangleq\sum_{k}w_{nfk}h_{nkt}\Gamma_{nf}\left(d\boldsymbol{\theta}\right)
+\mathfrak{C}_{nft}\left(d\boldsymbol{\theta}\right)\triangleq\lambda_{nft}^{2/\alpha}\Gamma_{nf}\left(d\boldsymbol{\theta}\right)\triangleq\left(\sum_{k}w_{nfk}h_{nkt}\right)^{2/\alpha}\Gamma_{nf}\left(d\boldsymbol{\theta}\right)
 \]
 
 \end_inset
@@ -128,7 +128,7 @@ and where
 \begin_layout Standard
 \begin_inset Formula 
 \[
-\boldsymbol{x}_{nft}\sim\mathcal{S}\alpha S_{\mathbb{C}}\left(\lambda_{nft}\boldsymbol{\Gamma}_{nf}\right)
+\boldsymbol{x}_{nft}\sim\mathcal{S}\alpha S_{\mathbb{C}}\left(\lambda_{nft}^{\alpha}\boldsymbol{\Gamma}_{nf}\right)
 \]
 
 \end_inset
@@ -136,7 +136,7 @@ and where
 and:
 \begin_inset Formula 
 \[
-\boldsymbol{x}_{ft}\triangleq\sum_{n=1}^{N}\boldsymbol{x}_{nft}\sim\mathcal{S}\alpha S_{\mathbb{C}}\left(\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Gamma}_{nf}\right)
+\boldsymbol{x}_{ft}\triangleq\sum_{n=1}^{N}\boldsymbol{x}_{nft}\sim\mathcal{S}\alpha S_{\mathbb{C}}\left(\sum_{n=1}^{N}\lambda_{nft}^{2/\alpha}\boldsymbol{\Gamma}_{nf}\right)
 \]
 
 \end_inset
@@ -145,7 +145,11 @@ In order to estimate
 \begin_inset Formula $\lambda_{nft}$
 \end_inset
 
- and 
+ (
+\begin_inset Formula $\lambda_{nft}^{1/2}$
+\end_inset
+
+power spectrogram) and 
 \begin_inset Formula $\Gamma_{nf}$
 \end_inset
 
@@ -471,7 +475,43 @@ and
 
 \end_inset
 
-.
+Let's try (maybe):
+\begin_inset Formula 
+\[
+\frac{\partial\mathcal{L}_{+}\left(\tilde{\boldsymbol{x}}_{ft}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf},\boldsymbol{\Pi},\mathbf{\Omega}\right)}{\partial\gamma_{nfp}}=\sum_{t,k}\left(\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}-\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}g_{nfp}^{\beta-2}\right)=0
+\]
+
+\end_inset
+
+i.e.
+ 
+\begin_inset Formula 
+\[
+\sum_{t,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}=g_{nfp}^{\beta-2}\sum_{t,k,p}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+g_{nfp}\leftarrow g_{nfp}\left(\frac{\sum_{t}\lambda_{nft}y_{ftp}^{\beta-2}\tilde{x}_{fp}}{\sum_{t}\lambda_{nft}y_{ftp}^{\beta-2}}\right)^{e\left(\beta\right)}
+\]
+
+\end_inset
+
+at the end, we can estimate 
+\begin_inset Formula $\Gamma_{nf}$
+\end_inset
+
+ by inverting 
+\begin_inset Formula $\Psi$
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
@@ -858,10 +898,71 @@ Covariation model
 
 \begin_layout Standard
 As a reminder, 
-\begin_inset Formula $\left[\boldsymbol{x}_{nftm},\boldsymbol{x}_{nftm^{\prime}}\right]_{\alpha}=\int_{\theta_{1},\theta_{2}\in\mathbb{S}^{2}}\theta_{1}\theta_{2}^{\left\langle \alpha-1\right\rangle }\Gamma_{\boldsymbol{x}_{nftmm^{\prime}}}\left(d\boldsymbol{\theta}\right)$
+\begin_inset Formula $\left[x_{nftm},x_{nftm^{\prime}}\right]_{\alpha}=\int_{\theta_{1},\theta_{2}\in\mathbb{S}^{2}}\theta_{1}\theta_{2}^{\left\langle \alpha-1\right\rangle }\Gamma_{\boldsymbol{x}_{nftmm^{\prime}}}\left(d\boldsymbol{\theta}\right)$
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+Von-Mises Fisher model for the spatial measure
+\end_layout
+
+\begin_layout Standard
+Let assume that:
+\begin_inset Formula 
+\[
+\boldsymbol{\Gamma}_{nf}\left(d\tilde{\boldsymbol{\mathbf{\theta}}}_{f}\right)=\left(g_{\mu_{f},\kappa_{f}}\left(\tilde{\boldsymbol{\mathbf{\theta}}}_{f}\right)+g_{\mu_{f},\kappa_{f}}\left(-\tilde{\boldsymbol{\mathbf{\theta}}}_{f}\right)\right)d\tilde{\boldsymbol{\mathbf{\theta}}}_{f}
+\]
+
+\end_inset
+
+where:
+\begin_inset Formula 
+\[
+g_{\mu_{f},\kappa_{f}}\left(\tilde{\boldsymbol{\mathbf{\theta}}}_{f}\right)=\frac{\kappa_{f}^{M-1}}{\left(2\pi\right)^{M}I_{M-1}\left(\kappa_{f}\right)}\exp\left(\kappa_{f}\boldsymbol{\mu}_{f}^{\top}\tilde{\boldsymbol{\mathbf{\theta}}}_{f}\right)
+\]
+
+\end_inset
+
+The Levy exponent becomes:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\tilde{\mathbf{x}}_{ft}\left(\boldsymbol{\mathbf{\theta}}\right)=\sum_{n}\int_{\boldsymbol{\mathbf{\theta}^{\prime}}_{f}}\left|\left\langle \boldsymbol{\theta}_{f},\mathbf{\boldsymbol{\theta}}_{f}^{\prime}\right\rangle \right|^{\alpha}\lambda_{nft}^{2/\alpha}\boldsymbol{\Gamma}_{nf}\left(d\boldsymbol{\mathbf{\theta}}_{f}^{\prime}\right)
+\]
+
+\end_inset
+
+We can show that (the inequality yields because 
+\begin_inset Formula $2/\alpha\geq1$
+\end_inset
+
+):
+\begin_inset Formula 
+\begin{align*}
+\tilde{\mathbf{X}} & =\sum_{n,f,t,p,p^{\prime}}\left(\sum_{k=1}^{K}w_{nfk}h_{nkt}\right)^{2/\alpha}\left|\left\langle \boldsymbol{\theta}_{fp},\mathbf{\boldsymbol{\theta}}_{fp^{\prime}}^{\prime}\right\rangle \right|^{\alpha}\left(\frac{\kappa_{f}^{M-1}}{\left(2\pi\right)^{M}I_{M-1}\left(\kappa_{f}\right)}\left[\exp\left(\kappa_{f}\boldsymbol{\mu}_{f}^{\top}\tilde{\boldsymbol{\mathbf{\theta}}}_{fp^{\prime}}\right)+\exp\left(-\kappa_{f}\boldsymbol{\mu}_{f}^{\top}\tilde{\boldsymbol{\mathbf{\theta}}}_{fp^{\prime}}\right)\right]\right)\\
+ & \leq\sum_{n,f,t,k,p,p^{\prime}}\pi_{nftk}^{1-2/\alpha}w_{nfk}^{2/\alpha}h_{nkt}^{2/\alpha}\left|\left\langle \boldsymbol{\theta}_{fp},\mathbf{\boldsymbol{\theta}}_{fp^{\prime}}^{\prime}\right\rangle \right|^{\alpha}\left(\frac{\kappa_{f}^{M-1}}{\left(2\pi\right)^{M}I_{M-1}\left(\kappa_{f}\right)}\left[\exp\left(\kappa_{f}\boldsymbol{\mu}_{f}^{\top}\tilde{\boldsymbol{\mathbf{\theta}}}_{fp^{\prime}}\right)+\exp\left(-\kappa_{f}\boldsymbol{\mu}_{f}^{\top}\tilde{\boldsymbol{\mathbf{\theta}}}_{fp^{\prime}}\right)\right]\right)\\
+ & \triangleq\mathcal{L}\left(W,H,\mathbf{\mu},\kappa,\pi\right)
+\end{align*}
+
+\end_inset
+
+with 
+\begin_inset Formula 
+\[
+\pi_{nftk}=\frac{w_{nfk}h_{nkt}}{\lambda_{nft}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Minimizing the distance 
 \end_layout
 
 \begin_layout Standard
