@@ -5,12 +5,12 @@ import sys, os
 import numpy as np
 import math as math
 
-HYP = 1.8
+HYP = 1.4
 BETA = 0.0
-it = 200
+it = 1000
 S = 2
 M = 2
-init = "ones"
+init = "circ"
 EST_DIR_A = "/home/mafontai/Documents/project/git_project/speech_separation/alpha_SpatialMNMF/results_" + str(S) + "toy/dev/"
 SAVE_PATH_A = os.path.join(EST_DIR_A, "alpha=%s" % str(HYP), "beta=%s" % str(BETA))
 file_path = os.path.join(SAVE_PATH_A, "alpha_SpatialMNMF-likelihood-interval=10-M={}-S={}-it={}-init={}-rand=1-ID=test.pic").format(str(M), str(S), str(it), init)
@@ -89,8 +89,7 @@ ax.set(xlabel='1st component', ylabel='2nd component', title='true and est obs')
 
 print("{} % of Spatial Measure accuracy error".format(100. * (np.abs(SM_true_NP-SM_NP) / np.abs(SM_true_NP+ 1e-14)).mean()))
 print("{} % of PSD accuracy error".format(100. * (np.abs(lambda_true_NT-lambda_NT) / np.abs(lambda_true_NT)).mean()))
-print("{} % of accuracy error".format(100. * (np.abs(Y_true_NTM-Y_NTM) / np.abs(Y_true_NTM)).mean()))
-import ipdb; ipdb.set_trace()
+print("{} % of data accuracy error".format(100. * (np.abs(Y_true_NTM-Y_NTM) / np.abs(Y_true_NTM)).mean()))
 fig.align_labels()
 fig.subplots_adjust(wspace=0.2, hspace=0.7)
 plt.savefig("results_toy.png", bbox_inches='tight', dpi=300)

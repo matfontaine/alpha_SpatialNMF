@@ -15,6 +15,14 @@ try:
 except:
     print("---Warning--- You cannot use GPU acceleration because chainer or cupy is not installed")
 
+sys.path.append("../CupyLibrary")
+
+try:
+    from cupy_matrix_inverse import inv_gpu_batch
+    FLAG_CupyInverse_Enabled = True
+except:
+    print("---Warning--- You cannot use cupy inverse calculation")
+    FLAG_CupyInverse_Enabled = False
 
 class alpha_SpatialMNMF():
     def __init__(self, n_source=2, n_mic=2, n_sample=2000, DIR_PATH=None, alpha=1.8, beta=0, seed=1, n_Th=180, xp=np, init_SM="unit"):
@@ -51,6 +59,7 @@ class alpha_SpatialMNMF():
         self.xp = xp
         self.seed = seed
         self.rand_s = self.xp.random.RandomState(self.seed)
+        self.calculateInverseMatrix = self.return_InverseMatrixCalculationMethod()
         self.init_SM = init_SM
 
         # precompute sphere sampling and variables
@@ -61,6 +70,14 @@ class alpha_SpatialMNMF():
             return data
         else:
             return self.xp.asnumpy(data)
+
+    def return_InverseMatrixCalculationMethod(self):
+        if self.xp == np:
+            return np.linalg.inv
+        elif FLAG_CupyInverse_Enabled:
+            return inv_gpu_batch
+        else:
+            return lambda x: cuda.to_gpu(np.linalg.inv(self.convert_to_NumpyArray(x)))
 
     def alpha_sampling(self, alpha=1, beta=1, mu=0, sigma=1, shape=None, seed=None):
         """
@@ -136,7 +153,7 @@ class alpha_SpatialMNMF():
                                                 S_NTP[n, :, :, None], axis=-2)
     def compute_Theta_Nearfield(self):  # Nearfield region assumption and Spatial measure = Diracs
         data = loadmat("rir_info.mat")
-        index = 5000 + 4
+        index = 5000 + 2
         mic_pos = data['INFO'][0][index]['mic_pos'][:self.n_mic]
         spk_pos = data['INFO'][0][index]['spk_pos'][:self.n_source]
         self.Theta_PM = self.xp.zeros((self.n_Th, self.n_mic)).astype(complex)
@@ -183,8 +200,8 @@ class alpha_SpatialMNMF():
         self.ThTh_PP = (self.Theta_PM.conj()[:, None] * self.Theta_PM[None]).sum(axis=-1)  # F x P x P'
         self.Psi_PP = self.xp.abs(self.ThTh_PP) ** (self.alpha)
 
-        phi = self.xp.sum(self.Psi_PP * self.Psi_PP.conj()).real / self.n_mic
-        self.Psi_PP = self.Psi_PP / self.xp.sqrt(phi)
+        self.phi = self.xp.sum(self.Psi_PP * self.Psi_PP.conj()).real / self.n_mic
+        self.Psi_PP = self.Psi_PP / self.xp.sqrt(self.phi)
         # Sketching and spatial parameters
         # self.compute_Lexp_est()
         self.compute_Lexp_est2()
@@ -210,6 +227,17 @@ class alpha_SpatialMNMF():
             print("Specify how to initialize the Spatial Measure {ones, circ}")
             raise ValueError
 
+    def init_G(self):
+        if "circ" == self.init_SM:
+            self.G_NP = self.xp.maximum(1e-2, self.xp.zeros([self.n_source, self.n_Th], dtype=self.xp.float))
+            for p in range(self.n_Th):
+                self.G_NP[p % self.n_source, p] = 1
+        if "ones" == self.init_SM:
+            self.G_NP = self.xp.ones((self.n_source, self.n_Th)).astype(self.xp.float)
+        else:
+            print("Specify how to initialize G {ones, circ}")
+            raise ValueError
+
     def init_PSD(self):
         self.lambda_NT = self.rand_s.rand(self.n_source, self.n_sample)
 
@@ -221,8 +249,23 @@ class alpha_SpatialMNMF():
         den_l = (self.Y_TP[None] ** (self.beta - 1.) *\
                  self.G_NP[:, None]).sum(axis=-1) + self.eps + self.l1
 
-        # self.lambda_NT *= (num_l/den_l) ** self.e
-        self.lambda_NT = self.lambda_true_NT
+        self.lambda_NT *= (num_l/den_l) ** self.e
+        self.reset_variable()
+
+    def update_G(self):
+        # N x T x P
+        num_g = (self.Y_TP[None] ** (self.beta - 2.) *\
+                      self.X_TP[None] *\
+                      self.lambda_NT[..., None]).sum(axis=1)
+        den_g = (self.Y_TP[None] ** (self.beta - 1.) *\
+                 self.lambda_NT[..., None]).sum(axis=1) + self.eps + self.l1
+
+        self.G_NP *= (num_g/den_g) ** self.e
+        # self.SM_NP = self.SM_true_NP
+#        self.SM_NFP[0, :, 0] = 1.
+#        self.SM_NFP[1, :, 1] = 1.
+#        self.SM_NFP[0, :, 1] = 1e-3
+#        self.SM_NFP[1, :, 0] = 1e-3
         self.reset_variable()
 
     def update_SM(self):
@@ -256,10 +299,10 @@ class alpha_SpatialMNMF():
         c = 2 ** (1. / self.alpha)
         eps = 1e-10
 
-        ThX = self.xp.real((self.Theta_PM[None].conj() * self.X_TM[:, None]).sum(axis=-1))  # F x T x P
-        Chf = self.xp.exp((1j / c) * ThX) + eps  # F x T x P
+        ThX = self.xp.real((self.Theta_PM[None].conj() * self.X_TM[:, None]).sum(axis=-1))  # T x P
+        Chf = (self.xp.exp((1j / c) * ThX) + eps).mean(axis=0)
 
-        self.X_TP = -2 * self.xp.log(self.xp.abs(self.X_TP))
+        self.X_TP = -2 * self.xp.log(self.xp.abs(Chf))[None] * self.xp.ones((self.n_sample, self.n_Th))
 
     def compute_Lexp_est2(self):
 
@@ -277,17 +320,17 @@ class alpha_SpatialMNMF():
         #     self.X_TP[:, p] = self.xp.convolve(self.xp.ones(self.delta_T)/self.delta_T,
         #                                            Chf[:, p],
         #                                            mode="same")
-        # self.X_TP = - self.xp.log(self.xp.abs(Chf).mean(axis=0))[None] * self.xp.ones((self.n_sample, self.n_Th))
+        self.X_TP = - self.xp.log(self.xp.abs(Chf).mean(axis=0))[None] * self.xp.ones((self.n_sample, self.n_Th))
 
     def normalize(self):
-        # self.W_NFK = self.W_NFK / phi_F[None, :, None]
-        # self.SM_NP /= self.xp.linalg.norm(self.SM_NP, axis=-1, keepdims=True)
-        # self.G_NP = (self.Psi_PP[None, ...] * self.SM_NP[:, None, :]).sum(axis=-1)
+        # self.lambda_NT = self.lambda_NT / self.phi
+        mu_N = (self.G_NP).sum(axis=-1)
+        self.G_NP = self.G_NP / mu_N[:, None]
+        self.lambda_NT *= mu_N[:, None]
 
-        # mu_NF = (self.G_NP).sum(axis=-1)
-        # self.G_NP = self.G_NP / mu_NF[..., None]
-
-        # self.lambda_NT /= self.xp.linalg.norm(self.lambda_NT, axis=0, keepdims=True)
+        mu_N = (self.SM_NP).sum(axis=-1)
+        self.SM_NP /= mu_N[:, None]
+        # self.lambda_NT *= mu_N[:, None]
         self.reset_variable()
 
     def update_P(self):
@@ -337,15 +380,14 @@ class alpha_SpatialMNMF():
         # Init variables
         self.W_NTMM = self.xp.ones((self.n_source, self.n_sample, self.n_mic, self.n_mic)).astype(self.xp.complex)
         self.W_NTMM *= (self.xp.eye(self.n_mic)/self.n_source)[None, None]
-        import ipdb; ipdb.set_trace()
         self.La_TMM = self.xp.zeros((self.n_sample, self.n_mic, self.n_mic)).astype(self.xp.complex)
         self.P_NTMMM = self.rand_s.rand(self.n_source, self.n_sample, self.n_mic, self.n_mic, self.n_mic).astype(self.xp.complex)
         self.ThTh_MMP = (self.Theta_PM.T[None] * self.Theta_PM.T.conj()[:, None])
+        import ipdb; ipdb.set_trace()
         for it in range(self.nE_it):
             self.update_P()
             self.update_Lagrange()
             self.update_W()
-        import ipdb; ipdb.set_trace()
         self.Y_NTM = (self.W_NTMM.conj() * self.X_TM[None, :, None]).sum(axis=-1)
 
     def E_Step_linear(self):
@@ -406,6 +448,7 @@ class alpha_SpatialMNMF():
     def M_Step(self):
         self.update_PSD()
         self.update_SM()
+        # self.update_G()
         self.normalize()
 
     def save_parameter(self, fileName):
@@ -440,6 +483,7 @@ class alpha_SpatialMNMF():
         self.n_iteration = n_iteration
 
         self.init_SMs()
+        # self.init_G()
         self.init_PSD()
         self.init_variable()
         self.make_filename_suffix()
