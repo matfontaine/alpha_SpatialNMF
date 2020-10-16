@@ -24,6 +24,7 @@ except:
     print("---Warning--- You cannot use cupy inverse calculation")
     FLAG_CupyInverse_Enabled = False
 
+
 class alpha_SpatialMNMF():
     def __init__(self, n_source=2, n_mic=2, n_sample=2000, DIR_PATH=None, alpha=1.8, beta=0, seed=1, n_Th=180, xp=np, init_SM="unit"):
         """ initialize alpha_SpatialMNMF
@@ -45,8 +46,8 @@ class alpha_SpatialMNMF():
         self.alpha = alpha # characteristic exponent
         self.n_mic = n_mic
         self.n_sample = n_sample
-        self.delta_T = 1 # average time horizon
-        self.l1 = 0.0  # l1 regularization
+        self.delta_T = self.n_sample // 10 # average time horizon
+        self.l1 = 0.2  # l1 regularization
         self.beta = beta # beta divergence
         if self.beta < 1.:
             self.e = (2 - self.beta) ** (-1)
@@ -163,9 +164,36 @@ class alpha_SpatialMNMF():
                 r_PM[int(self.n_Th / (n + 2)), m] = self.xp.linalg.norm(spk_pos[n] - mic_pos[m])
 
         for p in range(self.n_source, self.n_Th):
-            r_PM[p, :] = self.xp.abs(self.rand_s.rand(self.n_mic)) + 0.5
+            r_PM[p, :] = 3. * self.xp.abs(self.rand_s.rand(self.n_mic)) + 0.5
 
-        c =340. # speed of the sound in the air
+        c =340.  # speed of the sound in the air
+        freq_F = self.xp.fft.rfftfreq(2048, 1. / 16000.).astype(np.float32)
+
+        # nearfield assumption with the real distance
+        self.Theta_PM = (1./self.xp.maximum(3., r_PM[None]) *\
+                     self.xp.exp(-2j * self.xp.pi *
+                                 freq_F[:, None, None] *
+                                 r_PM[None] / c)).mean(axis=0)
+        self.Theta_PM /= self.xp.linalg.norm(self.Theta_PM, axis=-1, keepdims=True)
+
+    def compute_Theta_Farfield(self):  # Nearfield region assumption and Spatial measure = Diracs
+        data = loadmat("rir_info.mat")
+        index = 5000 + 2
+        mic_pos_M3 = data['INFO'][0][index]['mic_pos'][:self.n_mic]
+        nTheta = int(self.xp.sqrt(self.n_Th)/2)
+        nPhi = int(2 * self.xp.sqrt(self.n_Th))
+        theta = self.xp.linspace(0, np.pi, num=nTheta)
+        phi = self.xp.linspace(0, 2*np.pi, num=nPhi, endpoint=False)
+        Theta, Phi = self.xp.meshgrid(theta, phi)
+        sph_P3 = self.xp.stack((self.xp.sin(Theta)*self.xp.cos(Phi),
+                                self.xp.sin(Theta)*self.xp.sin(Phi),
+                                self.xp.cos(Theta)), axis=2)
+        sph_P3 = self.xp.reshape(sph_P3, (nPhi * nTheta, 3))
+
+        self.Theta_PM = self.xp.zeros((self.n_Th, self.n_mic)).astype(complex)
+        r_PM = (sph_P3[:, None] * self.xp.array(mic_pos_M3[None])).sum(axis=-1)
+
+        c =340.  # speed of the sound in the air
         freq_F = self.xp.fft.rfftfreq(2048, 1. / 16000.).astype(np.float32)
 
         # nearfield assumption with the real distance
@@ -200,8 +228,8 @@ class alpha_SpatialMNMF():
         self.ThTh_PP = (self.Theta_PM.conj()[:, None] * self.Theta_PM[None]).sum(axis=-1)  # F x P x P'
         self.Psi_PP = self.xp.abs(self.ThTh_PP) ** (self.alpha)
 
-        self.phi = self.xp.sum(self.Psi_PP * self.Psi_PP.conj()).real / self.n_mic
-        self.Psi_PP = self.Psi_PP / self.xp.sqrt(self.phi)
+        # self.phi = self.xp.sum(self.Psi_PP * self.Psi_PP.conj()).real / self.n_mic
+        # self.Psi_PP = self.Psi_PP / self.xp.sqrt(self.phi)
         # Sketching and spatial parameters
         # self.compute_Lexp_est()
         self.compute_Lexp_est2()
@@ -248,8 +276,9 @@ class alpha_SpatialMNMF():
                       self.G_NP[:, None]).sum(axis=-1)
         den_l = (self.Y_TP[None] ** (self.beta - 1.) *\
                  self.G_NP[:, None]).sum(axis=-1) + self.eps + self.l1
-
+        #
         self.lambda_NT *= (num_l/den_l) ** self.e
+        # self.lambda_NT = self.lambda_true_NT.copy()
         self.reset_variable()
 
     def update_G(self):
@@ -268,22 +297,36 @@ class alpha_SpatialMNMF():
 #        self.SM_NFP[1, :, 0] = 1e-3
         self.reset_variable()
 
+#     def update_SM(self):
+#         # N x T x P
+#         num_SM = (self.lambda_NT[..., None] *\
+#                   (self.Psi_PP.T[None] * self.X_TP[:, None]).sum(axis=-1)[None] *\
+#                   self.Y_TP[None] ** (self.beta - 2.)).sum(axis=1)
+#         den_SM = (self.lambda_NT[..., None] *\
+#                   (self.Psi_PP.T[None] * (self.Y_TP[:, None] ** (self.beta -1.))).sum(axis=-1)[None]
+#                   ).sum(axis=1) + self.eps + self.l1
+#         self.SM_NP *= (num_SM / den_SM) ** self.e
+#         # self.SM_NP = self.SM_true_NP.copy()
+# #        self.SM_NFP[0, :, 0] = 1.
+# #        self.SM_NFP[1, :, 1] = 1.
+# #        self.SM_NFP[0, :, 1] = 1e-3
+# #        self.SM_NFP[1, :, 0] = 1e-3
+#         self.reset_variable()
     def update_SM(self):
-        # N x T x P
-        num_SM = (self.lambda_NT[..., None] *\
-                  (self.Psi_PP.T[None] * self.X_TP[:, None]).sum(axis=-1)[None] *\
-                  self.Y_TP[None] ** (self.beta - 2.)).sum(axis=1)
-        den_SM = (self.lambda_NT[..., None] *\
-                  (self.Psi_PP.T[None] * (self.Y_TP[:, None] ** (self.beta -1.))).sum(axis=-1)[None]
-                  ).sum(axis=1) + self.eps + self.l1
+        # N x T x P x P
+        num_SM = (self.lambda_NT[..., None, None] *\
+                  self.Psi_PP[None, None] * self.X_TP[None, :, None] *\
+                  (self.Y_TP[None, :, None] ** (self.beta - 2.))).sum(axis=(1, -1))
+        den_SM = (self.lambda_NT[..., None, None] *\
+                  self.Psi_PP[None, None] * (self.Y_TP[None, :, None] ** (self.beta -1.))
+                  ).sum(axis= (1, -1)) + self.eps + self.l1
         self.SM_NP *= (num_SM / den_SM) ** self.e
-        # self.SM_NP = self.SM_true_NP
+        # self.SM_NP = self.SM_true_NP.copy()
 #        self.SM_NFP[0, :, 0] = 1.
 #        self.SM_NFP[1, :, 1] = 1.
 #        self.SM_NFP[0, :, 1] = 1e-3
 #        self.SM_NFP[1, :, 0] = 1e-3
         self.reset_variable()
-
 
 
     def reset_variable(self):
@@ -298,7 +341,6 @@ class alpha_SpatialMNMF():
 
         c = 2 ** (1. / self.alpha)
         eps = 1e-10
-
         ThX = self.xp.real((self.Theta_PM[None].conj() * self.X_TM[:, None]).sum(axis=-1))  # T x P
         Chf = (self.xp.exp((1j / c) * ThX) + eps).mean(axis=0)
 
@@ -317,16 +359,20 @@ class alpha_SpatialMNMF():
         self.X_TP = - self.xp.log(self.xp.abs(Chf))
         # self.X_TP = self.xp.zeros_like(Chf)
         # for p in range(self.n_Th):
-        #     self.X_TP[:, p] = self.xp.convolve(self.xp.ones(self.delta_T)/self.delta_T,
+        #     self.X_TP[:, p] = self.xp.convolve(self.xp.hamming(self.delta_T)/self.delta_T,
         #                                            Chf[:, p],
         #                                            mode="same")
         self.X_TP = - self.xp.log(self.xp.abs(Chf).mean(axis=0))[None] * self.xp.ones((self.n_sample, self.n_Th))
+        self.G_true_NP = (self.Psi_PP[None, ...] * self.SM_true_NP[:, None, :]).sum(axis=-1)
+        self.X_TP = (self.lambda_true_NT[..., None] * self.G_true_NP[:, None]).sum(axis=0)
 
     def normalize(self):
         # self.lambda_NT = self.lambda_NT / self.phi
-        mu_N = (self.G_NP).sum(axis=-1)
-        self.G_NP = self.G_NP / mu_N[:, None]
-        self.lambda_NT *= mu_N[:, None]
+        # mu_N = (self.G_NP).sum(axis=-1)
+        # self.G_NP = self.G_NP / mu_N[:, None]
+        # mu_N = (self.lambda_NT).sum(axis=-1)
+        # self.lambda_NT /= mu_N[:, None]
+        # self.lambda_NT *= mu_N[:, None]
 
         mu_N = (self.SM_NP).sum(axis=-1)
         self.SM_NP /= mu_N[:, None]
@@ -346,10 +392,10 @@ class alpha_SpatialMNMF():
         I1 = tmpI1_1 - tmpI1_2
         I1 *= self.lambda_NT[..., None, None, None, None]
         I1 *= self.SM_NP[:, None, None, None, None]
-        cov_NTP = self.lambda_NT[..., None] * self.SM_NP[:, None].sum(axis=0)
+        cov_TP = (self.lambda_NT[..., None] * self.SM_NP[:, None]).sum(axis=0)
         # N T "M" M M P
         I2 = (self.ThTh_MMP[None, None, None] *\
-              (WTh_NTMP)[:, :, :, None, None] ** (self.alpha - 2.)) * cov_NTP[:, :, None, None, None]
+              (WTh_NTMP)[:, :, :, None, None] ** (self.alpha - 2.)) * cov_TP[None, :, None, None, None, :]
         self.P_NTMMM = Cste * (I1 + I2).sum(axis=-1)
 
     def update_Lagrange(self):
@@ -376,14 +422,13 @@ class alpha_SpatialMNMF():
 
 
     def E_Step_cov(self):
-        self.nE_it = 80
+        self.nE_it = 1
         # Init variables
         self.W_NTMM = self.xp.ones((self.n_source, self.n_sample, self.n_mic, self.n_mic)).astype(self.xp.complex)
         self.W_NTMM *= (self.xp.eye(self.n_mic)/self.n_source)[None, None]
         self.La_TMM = self.xp.zeros((self.n_sample, self.n_mic, self.n_mic)).astype(self.xp.complex)
         self.P_NTMMM = self.rand_s.rand(self.n_source, self.n_sample, self.n_mic, self.n_mic, self.n_mic).astype(self.xp.complex)
         self.ThTh_MMP = (self.Theta_PM.T[None] * self.Theta_PM.T.conj()[:, None])
-        import ipdb; ipdb.set_trace()
         for it in range(self.nE_it):
             self.update_P()
             self.update_Lagrange()

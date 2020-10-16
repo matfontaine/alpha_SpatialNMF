@@ -1,0 +1,190 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Complete 
+\begin_inset Formula $\alpha-$
+\end_inset
+
+IVA
+\end_layout
+
+\begin_layout Standard
+Let's consider the model:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\boldsymbol{x}_{ft}=\sum_{l}\boldsymbol{a}_{lf}s_{lft}
+\]
+
+\end_inset
+
+with:
+\begin_inset Formula 
+\[
+s_{lft}\sim S\alpha S_{c}\left(\Upsilon_{lf}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Consider a nearfield model:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\mathbf{a}_{lf}=\frac{1}{r_{ml}}\exp\left(-\frac{i\omega_{f}r_{ml}}{c_{0}}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this case, we can show that:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\Gamma_{f}\left(\mathbf{s}\right)=\sum_{l=1}^{L}\Upsilon_{lf}\left\Vert \boldsymbol{a}_{lf}\right\Vert ^{\alpha}\left[\delta\left(\mathbf{s}-\frac{\boldsymbol{a}_{lf}}{\left\Vert \boldsymbol{a}_{lf}\right\Vert }\right)+\delta\left(\mathbf{s}+\frac{\boldsymbol{a}_{lf}}{\left\Vert \boldsymbol{a}_{lf}\right\Vert }\right)\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Basically, the multiplicative update rules will corresponds to:
+\begin_inset Formula 
+\[
+\boldsymbol{\Gamma}_{f}\leftarrow\boldsymbol{\Gamma}_{f}.\frac{\boldsymbol{\Psi}_{f}^{\top}\left(\left(\boldsymbol{\Psi}_{f}\boldsymbol{\Gamma}_{f}\right)^{\beta-2}.\hat{\boldsymbol{I}}_{f}\right)}{\boldsymbol{\Psi}_{f}^{\top}\left(\left(\boldsymbol{\Psi}_{f}\boldsymbol{\Gamma}_{f}\right)^{\beta-1}\right)+\lambda}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\lambda$
+\end_inset
+
+ is due to enforce the sparsity of vector 
+\begin_inset Formula $\Gamma_{f}$
+\end_inset
+
+.
+ For 
+\begin_inset Formula $N$
+\end_inset
+
+ points that we consider with a maximum energy and normalized steering vectors,
+ we have that:
+\begin_inset Formula 
+\[
+\Gamma_{f}\left(\mathbf{s}\right)=\sum_{n=1}^{N}\Upsilon_{nf}\delta\left(\mathbf{s}-\boldsymbol{a}_{nf}\right)+\Upsilon_{nf}\delta\left(\mathbf{s}+\boldsymbol{a}_{nf}\right)
+\]
+
+\end_inset
+
+ie 
+\begin_inset Formula 
+\[
+\Gamma_{f}\left(\mathbf{a}_{nf}\right)=\frac{\Upsilon_{nf}}{2}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\boldsymbol{x}_{ft}=\sum_{n}\left(2\Gamma_{f}\left(\mathbf{a}_{nf}\right)\right)^{1/\alpha}\frac{\boldsymbol{a}_{nf}}{\left\Vert \boldsymbol{a}_{nf}\right\Vert }\tilde{s}_{nft}
+\]
+
+\end_inset
+
+We then have an estimator of our mixing matrix.
+\end_layout
+
+\end_body
+\end_document

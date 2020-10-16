@@ -36,9 +36,8 @@ if __name__ == "__main__":
         import cupy as xp
         print("Use GPU " + str(args.gpu))
         xp.cuda.Device(args.gpu).use()
-    id_file = "test"
     file_path = os.path.join(SAVE_PATH,
-                             "alpha_SpatialMNMF-likelihood-interval={}-M={}-S={}-it={}-init={}-rand={}-ID={}.pic".format(str(args.n_inter), str(args.n_mic), str(args.n_speaker), str(args.n_iteration), str(args.init_SM), str(args.seed), str(id_file)))
+                             "alpha_SpatialMNMF-parameters-M={}-S={}-it={}-init={}-rand={}-ID={}.npz".format(str(args.n_inter), str(args.n_mic), str(args.n_speaker), str(args.n_iteration), str(args.init_SM), str(args.seed), str(id_file)))
     if os.path.exists(file_path):
         print("alpha_SpatialMNMF => interval={}-M={}-S={}-it={}-init={}-rand={}-ID={} already done.".format(str(args.n_inter), str(args.n_mic), str(args.n_speaker), str(args.n_iteration), str(args.init_SM), str(args.seed), str(id_file)))
         pass

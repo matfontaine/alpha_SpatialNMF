@@ -285,7 +285,7 @@ We consider the
  & d_{\beta}\left(\tilde{\boldsymbol{x}}_{ft}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right)\\
  & =\sum_{f,t,p}\frac{1}{\beta\left(\beta-1\right)}\left(\left\{ \tilde{\boldsymbol{x}}_{ft}\right\} _{p}^{\beta}+\left(\beta-1\right)\left[\sum_{n,k=1}^{N,K}w_{nfk}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{\beta}-\beta\left\{ \tilde{\boldsymbol{x}}_{ft}\right\} _{p}\left[\sum_{n,k=1}^{N,K}w_{nfk}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{\beta-1}\right)\\
  & \leq\sum_{f,t,p}\left(\text{\beta\left(\beta-1\right)}\tilde{x}_{ftp}^{\beta}+\pi_{ftp}^{\beta-1}\left(\sum_{n,k=1}^{N,K}w_{nfk}h_{nkt}\tilde{g}_{nfp}-\pi_{ftp}\right)+\frac{\pi_{ftp}^{\beta}}{\beta}-\frac{1}{\beta-1}\tilde{x}_{ftp}\sum_{n,k=1}^{N,K}\omega_{ftnkp}\left(\frac{w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\tilde{g}_{nfp}^{\beta-1}}{\omega_{ftnkp}^{\beta-1}}\right)\right)\\
- & \leq\sum_{f,t,p}\left(\text{\beta\left(\beta-1\right)}\tilde{x}_{ftp}^{\beta}+\pi_{ftp}^{\beta-1}\left(\sum_{n,k,p^{\prime}=1}^{N,K,P}w_{nfk}h_{nkt}\psi_{fpp^{\prime}}\gamma_{nfp^{\prime}}-\pi_{ftp}\right)+\frac{\pi_{ftp}^{\beta}}{\beta}-\frac{1}{\beta-1}\tilde{x}_{ftp}\sum_{n,k,p^{\prime}=1}^{N,K,P}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}\right)\\
+ & \leq\sum_{f,t,p}\left(\text{\beta\left(\beta-1\right)}\tilde{x}_{ftp}^{\beta}+\pi_{ftp}^{\beta-1}\left(\sum_{n,k,p^{\prime}=1}^{N,K,P}w_{nfk}h_{nkt}\psi_{fpp^{\prime}}\gamma_{nfp^{\prime}}-\pi_{ftp}\right)+\frac{\pi_{ftp}^{\beta}}{\beta}-\frac{1}{\beta-1}\tilde{x}_{ftp}\sum_{n,k,p^{\prime}=1}^{N,K,P}\omega_{ftnkpp^{\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}\right)\\
  & \triangleq\mathcal{L}_{+}\left(\tilde{\boldsymbol{x}}_{f}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf},\boldsymbol{\Pi},\mathbf{\Omega},\mathbf{\rho}\right)
 \end{align*}
 
@@ -305,7 +305,7 @@ with
  The equalities hold when
 \begin_inset Formula 
 \begin{align*}
-\omega_{ftnkp} & =w_{nkf}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\left[\sum_{n,k}w_{nkf}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{-1}\triangleq w_{nkf}h_{nkt}\tilde{g}_{nfp}y_{ftp}^{-1}\\
+\omega_{ftnkpp^{\prime}} & =w_{nkf}h_{nkt}\psi_{fpp^{\prime}}\gamma_{nfp^{\prime}}\left[\sum_{n,k}w_{nkf}h_{nkt}\left\{ \boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf}\right\} _{p}\right]^{-1}\triangleq w_{nkf}h_{nkt}\psi_{fpp^{\prime}}\gamma_{nfp^{\prime}}y_{ftp}^{-1}\\
 \pi_{ftp} & =y_{ftp},\;\rho_{nfpp^{\prime}}=\psi_{fpp^{\prime}}\gamma_{nfp^{\prime}}\tilde{g}_{nfp}^{-1}
 \end{align*}
 
@@ -397,7 +397,7 @@ We assume that
 \begin_inset Formula 
 \begin{align*}
  & \frac{\partial\mathcal{L}_{+}\left(\tilde{\boldsymbol{x}}_{ft}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}_{f}\hat{\boldsymbol{\Gamma}}_{nf},\boldsymbol{\Pi},\mathbf{\Omega}\right)}{\partial\gamma_{nfp^{\prime\prime}}}\\
- & =\sum_{t,p,k}\left(\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}-\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}\gamma_{nfp^{\prime\prime}}^{\beta-2}\right)
+ & =\sum_{t,p,k}\left(\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}-\tilde{x}_{ftp}\omega_{ftnkpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}\gamma_{nfp^{\prime\prime}}^{\beta-2}\right)
 \end{align*}
 
 \end_inset
@@ -405,7 +405,7 @@ We assume that
 we zeroing and get:
 \begin_inset Formula 
 \[
-\sum_{t,p,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}=\gamma_{nfp^{\prime\prime}}^{\beta-2}\sum_{t,p,k}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}
+\sum_{t,p,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}=\gamma_{nfp^{\prime\prime}}^{\beta-2}\sum_{t,p,k}\tilde{x}_{ftp}\omega_{ftnkpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}
 \]
 
 \end_inset
@@ -420,7 +420,7 @@ i.e:
 \begin_layout Standard
 \begin_inset Formula 
 \[
-\gamma_{nfp^{\prime\prime}}\leftarrow\left(\frac{\sum_{t,p,k}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}}{\sum_{t,p,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}}\right)^{e\left(\beta\right)}
+\gamma_{nfp^{\prime\prime}}\leftarrow\left(\frac{\sum_{t,p,k}\tilde{x}_{ftp}\omega_{ftnkpp^{\prime\prime}}^{2-\beta}w_{nfk}^{\beta-1}h_{nkt}^{\beta-1}\psi_{fpp^{\prime\prime}}^{\beta-1}}{\sum_{t,p,k}\pi_{ftp}^{\beta-1}w_{nfk}h_{nkt}\psi_{fpp^{\prime\prime}}}\right)^{e\left(\beta\right)}
 \]
 
 \end_inset
@@ -450,7 +450,7 @@ i.e.:
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\hat{\boldsymbol{\Gamma}}_{nf}\leftarrow\hat{\boldsymbol{\Gamma}}_{nf}.\left(\frac{\sum_{t}\lambda_{nft}\boldsymbol{\Psi}_{f}^{\top}\left(\boldsymbol{y}_{ft}^{\odot\beta-2}\odot\tilde{\boldsymbol{x}}_{ft}\right)}{\sum_{t}\lambda_{nft}\boldsymbol{\Psi}_{f}^{\top}\boldsymbol{y}_{ft}^{\odot\beta-1}}\right)^{\odot e\left(\beta\right)}\label{eq:up_Gamma-1}
+\hat{\boldsymbol{\Gamma}}_{nf}\leftarrow\hat{\boldsymbol{\Gamma}}_{nf}.\left(\frac{\sum_{t}\lambda_{nft}\boldsymbol{\Psi}_{f}^{\top}\left(\tilde{\boldsymbol{x}}_{ft}^{\top}\boldsymbol{y}_{ft}^{\odot\beta-2}\right)}{\sum_{t}\lambda_{nft}\boldsymbol{\Psi}_{f}^{\top}\boldsymbol{y}_{ft}^{\odot\beta-1}}\right)^{\odot e\left(\beta\right)}\label{eq:up_Gamma-1}
 \end{equation}
 
 \end_inset
@@ -531,7 +531,7 @@ We assume that the spatial measures
  We get:
 \begin_inset Formula 
 \[
-\frac{\partial\mathcal{L}_{+}\left(\tilde{\boldsymbol{x}}_{ft}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf},\boldsymbol{\Pi},\mathbf{\Omega}\right)}{\partial w_{nfk}}=\sum_{t,p}\left(\pi_{ftp}^{\beta-1}h_{nkt}\tilde{g}_{nfp}-\sum_{p^{\prime}}\tilde{x}_{ftp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime}}^{2-\beta}w_{nfk}^{\beta-2}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}\right)
+\frac{\partial\mathcal{L}_{+}\left(\tilde{\boldsymbol{x}}_{ft}\mid\sum_{n=1}^{N}\lambda_{nft}\boldsymbol{\Psi}\hat{\boldsymbol{\Gamma}}_{nf},\boldsymbol{\Pi},\mathbf{\Omega}\right)}{\partial w_{nfk}}=\sum_{t,p}\left(\pi_{ftp}^{\beta-1}h_{nkt}\tilde{g}_{nfp}-\sum_{p^{\prime}}\tilde{x}_{ftp}\omega_{ftnkpp^{\prime}}^{2-\beta}w_{nfk}^{\beta-2}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}\right)
 \]
 
 \end_inset
@@ -539,7 +539,7 @@ We assume that the spatial measures
 i.e we have:
 \begin_inset Formula 
 \begin{align*}
-\sum_{t,p=1}^{T,P}\pi_{ftp}^{\beta-1}h_{nkt}\tilde{g}_{nfp} & =w_{nfk}^{\beta-2}\sum_{t,p,p^{\prime}=1}^{T,P,P}\tilde{x}_{fp}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime}}^{2-\beta}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}
+\sum_{t,p=1}^{T,P}\pi_{ftp}^{\beta-1}h_{nkt}\tilde{g}_{nfp} & =w_{nfk}^{\beta-2}\sum_{t,p,p^{\prime}=1}^{T,P,P}\tilde{x}_{fp}\omega_{ftnkpp^{\prime}}^{2-\beta}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}
 \end{align*}
 
 \end_inset
@@ -547,7 +547,7 @@ i.e we have:
 
 \begin_inset Formula 
 \begin{equation}
-w_{nfk}\leftarrow\left(\frac{\sum_{t,p,p^{\prime}}\omega_{ftnkp}^{2-\beta}\rho_{nfpp^{\prime}}^{2-\beta}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}\tilde{x}_{fp}}{\sum_{t,p}h_{nkt}\pi_{ftp}^{\beta-1}\tilde{g}_{nfp}}\right)^{e\left(\beta\right)}\label{eq:up_w-1}
+w_{nfk}\leftarrow\left(\frac{\sum_{t,p,p^{\prime}}\omega_{ftnkpp^{\prime}}^{2-\beta}h_{nkt}^{\beta-1}\psi_{fpp^{\prime}}^{\beta-1}\gamma_{nfp^{\prime}}^{\beta-1}\tilde{x}_{fp}}{\sum_{t,p}h_{nkt}\pi_{ftp}^{\beta-1}\tilde{g}_{nfp}}\right)^{e\left(\beta\right)}\label{eq:up_w-1}
 \end{equation}
 
 \end_inset
@@ -901,6 +901,53 @@ As a reminder,
 \begin_inset Formula $\left[x_{nftm},x_{nftm^{\prime}}\right]_{\alpha}=\int_{\theta_{1},\theta_{2}\in\mathbb{S}^{2}}\theta_{1}\theta_{2}^{\left\langle \alpha-1\right\rangle }\Gamma_{\boldsymbol{x}_{nftmm^{\prime}}}\left(d\boldsymbol{\theta}\right)$
 \end_inset
 
+.
+ Let's consider a model:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\boldsymbol{x}_{nft}\sim S\alpha S_{\mathbb{C}}\left(0,\boldsymbol{G}_{nft,\alpha}\right)
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $G_{nft}$
+\end_inset
+
+is the covariation matrix define as follow
+\begin_inset Formula 
+\[
+\boldsymbol{G}_{nft}=\lambda_{nft}^{\alpha}\left[\text{\begin{array}{ccc}
+ \left[x_{nf1},x_{nf1}\right]_{\alpha}  &  \dots\   &  \left[x_{nf1},x_{nfM}\right]_{\alpha}\\
+ \vdots\  &  \ddots\  &  \vdots\\
+ \left[x_{nfM},x_{nf1}\right]_{\alpha}  &  \dots\   &  \left[x_{nfM},x_{nfM}\right]_{\alpha} 
+\end{array}}\right]
+\]
+
+\end_inset
+
+where we assume a joint diagonalization form:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\boldsymbol{G}_{nft}=\lambda_{nft}^{\alpha}\boldsymbol{Q}_{f}^{-1}\mathrm{diag}\text{\left(\left[x_{nftm},x_{nftm}\right]_{\alpha}\right)}\boldsymbol{Q}_{f}^{-\mathrm{H}}
+\]
+
+\end_inset
+
+In this case, we have that:
+\begin_inset Formula 
+\[
+\boldsymbol{Q}_{f}\boldsymbol{x}_{ft}\sim S\alpha S_{\mathbb{C}}\left(\sum_{n=1}^{N}\lambda_{nft}^{\alpha}\mathrm{diag}\text{\left(\left[x_{nftm},x_{nftm}\right]_{\alpha}\right)}\right)
+\]
+
+\end_inset
+
 
 \end_layout
 
@@ -962,7 +1009,65 @@ with
 \end_layout
 
 \begin_layout Section
-Minimizing the distance 
+Pdf expressed with the spatial measure
+\end_layout
+
+\begin_layout Standard
+let's define:
+\begin_inset Formula 
+\[
+I_{ft}\left(\mathbf{\theta}\right)=\sum_{p^{\prime},n=1}^{P^{\prime},N}\lambda_{nft}\left|\left\langle \boldsymbol{\theta},\mathbf{\boldsymbol{\theta}}_{fp^{\prime}}^{\prime}\right\rangle \right|^{\alpha}\left(\frac{\kappa_{f}^{M-1}}{\left(2\pi\right)^{M}\mathcal{I}_{M-1}\left(\kappa_{f}\right)}\left[\exp\left(\kappa_{f}\boldsymbol{\mu}_{f}^{\top}\mathbf{\boldsymbol{\theta}}_{fp^{\prime}}^{\prime}\right)+\exp\left(-\kappa_{f}\boldsymbol{\mu}_{f}^{\top}\mathbf{\boldsymbol{\theta}}_{fp^{\prime}}^{\prime}\right)\right]\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+p\left(\boldsymbol{X}\mid\boldsymbol{\Gamma},\lambda\right) & =\prod_{f,t}\int_{\mathbb{C}^{M}}\exp\left(-i\Re\left\langle \boldsymbol{\theta}_{f},\boldsymbol{x}_{ft}\right\rangle -\sum_{n=1}^{N}\int_{\boldsymbol{s}\in\mathcal{S}_{\mathbb{C}}^{M}}\left|\left\langle \boldsymbol{\theta},\boldsymbol{s}\right\rangle \right|^{\alpha}\lambda_{nft}^{1/\alpha}\Gamma_{nf}\left(d\mathbf{s}\right)\right)d\boldsymbol{\theta}\\
+ & =\prod_{f,t}\int_{\mathbb{C}^{M}}\exp\left(-i\Re\left\langle \boldsymbol{\theta},\boldsymbol{x}_{ft}\right\rangle -I_{ft}\left(\mathbf{\theta}\right)\right)d\boldsymbol{\theta}\\
+ & =\prod_{f,t}\int_{\theta^{\prime}\in S_{C}^{M}}\frac{\eta\left(\frac{\left|\left\langle \boldsymbol{\theta}^{\prime},\mathbf{x}_{ft}\right\rangle \right|^{2}}{I_{ft}\left(\boldsymbol{\theta}^{\prime}\right)^{2/\alpha}}\right)}{I_{ft}\left(\boldsymbol{\theta}^{\prime}\right)^{2M/\alpha}}d\theta^{\prime}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\eta_{D}(\rho)=\frac{1}{\alpha}\sum_{n=0}^{+\infty}\frac{(-1)^{n}\Gamma\left(\frac{2(n+K)}{\alpha}\right)}{2^{2n}(n!)^{2}}\rho^{n}\simeq\left(a\rho^{2}+b\rho+c\right)e^{-d\rho}
+\]
+
+\end_inset
+
+The last equality is due to a change of variable in spherical coordinate
+ on the hypersphere, using the isotropy property of a random vector and
+ integration by part.
+ 
+\end_layout
+
+\begin_layout Standard
+i.e we have:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+p\left(\boldsymbol{X}\mid\boldsymbol{\Gamma},\lambda\right)\simeq\prod_{f,t}\int_{\theta^{\prime}\in S_{C}^{M}}\left(a\frac{\left|\left\langle \boldsymbol{\theta}^{\prime},\mathbf{x}_{ft}\right\rangle \right|^{4}}{I_{ft}\left(\boldsymbol{\theta}^{\prime}\right)^{\left(4+2M\right)/\alpha}}+b\frac{\left|\left\langle \boldsymbol{\theta}^{\prime},\mathbf{x}_{ft}\right\rangle \right|^{2}}{I_{ft}\left(\boldsymbol{\theta}^{\prime}\right)^{\left(\text{2+2M}\right)/\alpha}}+\frac{c}{I_{ft}\left(\boldsymbol{\theta}^{\prime}\right)^{2M/\alpha}}\right)e^{-d\frac{\left|\left\langle \boldsymbol{\theta}^{\prime},\mathbf{x}_{ft}\right\rangle \right|^{2}}{I_{ft}\left(\boldsymbol{\theta}^{\prime}\right)^{2/\alpha}}}d\boldsymbol{\theta}^{\prime}
+\]
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
