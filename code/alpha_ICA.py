@@ -10,6 +10,7 @@ import pickle as pic
 import scipy as sc
 import h5py
 import pyroomacoustics as pyroom
+import matplotlib.pyplot as plt
 from progressbar import progressbar
 try:
     FLAG_GPU_Available = True
@@ -17,9 +18,9 @@ except:
     print("---Warning--- You cannot use GPU acceleration because chainer or cupy is not installed")
 
 
-class alpha_IVA():
+class alpha_ICA():
     def __init__(self, n_source=2, DIR_PATH=None, alpha=1.8, beta=0, seed=1, xp=np):
-        """ initialize alpha_IVA
+        """ initialize alpha_ICA
 
         Parameters:
         -----------
@@ -30,14 +31,14 @@ class alpha_IVA():
             init_SM: str
                 how to initialize spatial measure{all one: "ones", circulant matrix: "circ"}
         """
-        super(alpha_IVA, self).__init__()
+        super(alpha_ICA, self).__init__()
         self.eps = 1e-7
         self.DIR_PATH = DIR_PATH
         self.n_source = n_source
         self.alpha = alpha # characteristic exponent
-        self.l1 = 0.0  # l1 regularization
+        self.l1 = 1e-2  # l1 regularization
         self.beta = beta # beta divergence
-        self.method_name = "alpha_IVA"
+        self.method_name = "alpha_ICA"
         self.DIR_PATH = "/media/mafontai/SSD 2/data/speech_separation/wsj0/data/mix/"
         self.xp = xp
         self.seed = seed
@@ -66,23 +67,39 @@ class alpha_IVA():
 
     def save_A(self):
         f_model = h5py.File('/media/mafontai/SSD 2/data/speech_separation/RIRmodel.mat')
-        A_model = f_model[u'a_model'].value[self.minF:self.maxF]
-
+        A_model = f_model[u'a_model'].value
         P = A_model.shape[1] * A_model.shape[2]
-        A_model = np.reshape(A_model, (A_model.shape[0], P, A_model.shape[3]))
-        np.savez(self.DIR_PATH + "Theta-range=(1000-3000).npz", Theta_FPM=A_model)
-        print('Theta are saved in {}'.format(self.DIR_PATH))
+        A_model = self.xp.reshape(self.xp.array(A_model), (A_model.shape[0], P, A_model.shape[3]))
+        A_FPM = self.xp.zeros((1025, P, 50)).astype(self.xp.complex64)
+        for m in range(50):
+            A_FPM[..., m] = self.xp.fft.rfft(A_model[..., m], n=2048, axis=0)
+        np.savez(self.DIR_PATH + "A.npz", A_FPM=A_FPM)
+        print('A are saved in {}'.format(self.DIR_PATH))
 
-    def load_Theta(self):
-        self.Theta_FPM = np.load(self.DIR_PATH + "Theta-range=(1000-3000).npz")['Theta_FPM'][..., :self.n_mic]
-        self.Theta_FPM = self.xp.asarray(self.Theta_FPM)
+    def load_A(self):
+        self.A_FPM = np.load(self.DIR_PATH + "A.npz")['A_FPM'][..., :self.n_mic]
+        self.A_FPM = self.xp.asarray(self.A_FPM)
+
+    def compute_Lexp_est(self):
+
+        """
+        Compute empirical Levy_exponent of X := -ln (chf.(X)) with constant depending on alpha
+        """
+
+        c = 2 ** (1. / self.alpha)
+        eps = 1e-10
+
+        ThX = self.xp.real((self.A_FPM[self.minF:self.maxF, None].conj() * self.X_FTM[self.minF:self.maxF, :, None]).sum(axis=-1))  # F x T x P
+        Chf = self.xp.exp((1j / c) * ThX).mean(axis=1) + eps  # F x P
+
+        self.X_FxP = self.xp.reshape(-2 * self.xp.log(self.xp.abs(Chf)), (self.n_freq * self.P)).astype(self.xp.float32)
 
     def compute_psi(self):
         file_name = os.path.join(self.DIR_PATH, "Psi-nfft=2048-alpha={}-n_mic={}-range=(1000-3000).npz".format(self.alpha, self.n_mic))
         self.Psi_FxPP = np.load(file_name)['Psi_FPP']
         self.P = self.Psi_FxPP.shape[1]
         self.Psi_FxPP = np.reshape(self.Psi_FxPP, (self.n_freq * self.P, self.P))
-        self.Psi_FxPP = self.xp.asarray(self.Psi_FxPP)
+        self.Psi_FxPP = self.xp.asarray(self.Psi_FxPP).astype(self.xp.float32)
 
 
     def init_SMs(self):
@@ -97,36 +114,23 @@ class alpha_IVA():
 
     def source_detection(self):
         self.SM_P /= self.SM_P.max()
-        self.peak_indices = sc.signal.find_peaks(self.convert_to_NumpyArray(self.SM_P), height=0.1, distance=10)
-        self.n_source_estimated = len(self.peak_indices)
+        tmp_SM = self.convert_to_NumpyArray(self.xp.reshape(self.SM_P, (51, 41)))
+        plt.imshow(tmp_SM)
+
+        self.peak_indices = sc.signal.find_peaks(self.convert_to_NumpyArray(self.SM_P), height=0.7, distance=30)
+        self.n_source_estimated = len(self.peak_indices[0])
         print('real / estimated # of sources : {}/ {}'.format(self.n_source, self.n_source_estimated))
 
+
     def separation(self):
-        f_model = h5py.File('/media/mafontai/SSD 2/data/speech_separation/RIRmodel.mat')
-        A_model = f_model[u'a_model'].value
+        self.A_FMN = self.A_FPM[:, self.peak_indices[0], :].transpose(0, 2, 1)
+        S_FTN = (np.linalg.pinv(self.convert_to_NumpyArray(self.A_FMN))[:, None] * self.convert_to_NumpyArray(self.X_FTM[:, :, None])).sum(axis=-1)
+        self.n_freq = S_FTN.shape[0]
+        self.Y_NFTM = self.xp.zeros((self.n_source_estimated, self.n_freq, self.n_time, self.n_mic)).astype(self.xp.complex64)
+        for m in range(self.n_mic):
+            self.Y_NFTM[..., m] = self.xp.asarray(pyroom.bss.common.projection_back(S_FTN.transpose(1, 0, 2), self.convert_to_NumpyArray(self.X_FTM[..., m]).T).conj().T[..., None] * S_FTN.transpose(2, 0, 1))
 
-        P = A_model.shape[1] * A_model.shape[2]
-        A_model = self.xp.reshape(self.xp.array(A_model), (A_model.shape[0], P, A_model.shape[3]))
 
-        self.A_FMN = self.xp.zeros((A_model.shape[0], self.n_mic, self.n_source_estimated)).astype(self.xp.complex64)
-        for n in range(self.n_source_estimated):
-            self.A_FMN[..., n] = A_model[:, self.peak_indices[n], :]
-
-        self.S_NFT = (np.linalg.pinv(self.A_FMN)[:, None] * self.X_FTM[:, :, None]).sum(axis=-1).transpose(2, 0, 1)
-        
-    def compute_Lexp_est(self):
-
-        """
-        Compute empirical Levy_exponent of X := -ln (chf.(X)) with constant depending on alpha
-        """
-
-        c = 2 ** (1. / self.alpha)
-        eps = 1e-10
-
-        ThX = self.xp.real((self.Theta_FPM[:, None].conj() * self.X_FTM[self.minF:self.maxF, :, None]).sum(axis=-1))  # F x T x P
-        Chf = self.xp.exp((1j / c) * ThX).mean(axis=1) + eps  # F x P
-
-        self.X_FxP = np.reshape(-2 * self.xp.log(self.xp.abs(Chf)), (self.n_freq * self.P))
 
 
     def M_Step(self):
@@ -159,7 +163,7 @@ class alpha_IVA():
         self.compute_psi()
         self.init_SMs()
         # self.save_A()
-        self.load_Theta()
+        self.load_A()
         self.compute_Lexp_est()
         self.make_filename_suffix()
 
@@ -184,6 +188,7 @@ class alpha_IVA():
                 # sdr_array.append(bss_results[0])
                 # sir_array.append(bss_results[1])
                 # sar_array.append(bss_results[2])
+
         self.source_detection()
         self.separation()
         if save_likelihood and (it+1 == self.n_iteration):
@@ -196,7 +201,6 @@ class alpha_IVA():
             self.save_separated_signal(save_path+"{}-{}-{}".format(self.method_name, self.filename_suffix, it + 1))
 
         if save_wav and ((it+1) == self.n_iteration):
-            self.E_Step()
             self.save_separated_signal(save_path+"{}-{}".format(self.method_name, self.filename_suffix))
         if save_parameter:
             self.save_parameter(save_path + "{}-parameters-{}.npz".format(self.method_name, self.filename_suffix))
@@ -228,11 +232,11 @@ class alpha_IVA():
             for m in range(self.n_mic):
                 tmp = librosa.core.istft(self.Y_NFTM[n, :, :, m], hop_length=hop_length)
                 if n == 0 and m == 0:
-                    separated_signal = np.zeros([self.n_source, len(tmp), self.n_mic])
+                    separated_signal = np.zeros([self.n_source_estimated, len(tmp), self.n_mic])
                 separated_signal[n, :, m] = tmp
         separated_signal /= np.abs(separated_signal).max() * 1.2
 
-        for n in range(self.n_source):
+        for n in range(self.n_source_estimated):
             sf.write(save_fileName + "-N={}.wav".format(n), separated_signal[n], 16000)
 
     def make_filename_suffix(self):

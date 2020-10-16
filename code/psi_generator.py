@@ -51,7 +51,8 @@ if __name__ == "__main__":
     minF = int(args.minF * args.nfft / 16000)
     #
     dF = maxF - minF
-    ALPHA = [1., 1.2, 1.4, 1.6, 1.8]
+    ALPHA = [0.4, 0.6, 0.8]
+    # ALPHA = [1., 1.2, 1.4, 1.6, 1.8]
     MIC = [10, 20, 30]
     f_model = h5py.File('/media/mafontai/SSD 2/data/speech_separation/RIRmodel.mat')
 

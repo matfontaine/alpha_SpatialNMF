@@ -10,7 +10,7 @@ import time
 import pickle as pic
 
 import h5py
-from alpha_IVA import alpha_IVA
+from alpha_ICA import alpha_ICA
 try:
     FLAG_GPU_Available = True
 except:
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     DIR_PATH = "/media/mafontai/SSD 2/data/speech_separation/wsj0/data/mix"
-    EST_DIR = "/home/mafontai/Documents/project/git_project/speech_separation/alpha_IVA/results_" + str(args.n_speaker) + "reverb/"
+    EST_DIR = "/home/mafontai/Documents/project/git_project/speech_separation/alpha_ICA/results_" + str(args.n_speaker) + "reverb/"
     SAVE_PATH = os.path.join(EST_DIR, "alpha=%s" % str(args.alpha), "beta=%s/" % str(args.beta))
 
 
@@ -53,33 +53,33 @@ if __name__ == "__main__":
         print("Use GPU " + str(args.gpu))
         xp.cuda.Device(args.gpu).use()
     # import ipdb; ipdb.set_trace()
-
-    size = []
-    for n in range(args.n_speaker):
-        tmp_name = os.path.join(DIR_PATH, "audio-N={}-seed={}.wav".format(n, args.id))
-        tmp_wav, fs = sf.read(tmp_name)
-        size.append(tmp_wav.shape[0])
-
-    sig_size = min(size)
-    for n in range(args.n_speaker):
-        tmp_name = os.path.join(DIR_PATH, "audio-N={}-seed={}.wav".format(n, args.id))
-        tmp_wav, fs = sf.read(tmp_name)
-        tmp_wav = tmp_wav[:sig_size-1].T
-        for m in range(args.n_mic):
-            tmp = librosa.core.stft(np.asfortranarray(tmp_wav[m]),
-                                    n_fft=args.n_fft,
-                                    hop_length=int(args.n_fft/4))
-            if m == 0 and n == 0:
-                spec = np.zeros([tmp.shape[0], tmp.shape[1], args.n_mic], dtype=np.complex)
-
-            spec[:, :, m] += tmp
     file_path = os.path.join(SAVE_PATH,
-                             "alpha_IVA-likelihood-interval={}-M={}-S={}-it={}-ID={}.pic".format(str(args.n_inter), str(args.n_mic), str(args.n_speaker), str(args.n_iteration), str(args.id)))
+                             "alpha_ICA-likelihood-interval={}-M={}-S={}-it={}-ID={}.pic".format(str(args.n_inter), str(args.n_mic), str(args.n_speaker), str(args.n_iteration), str(args.id)))
     if os.path.exists(file_path):
-        print("alpha_SpatialMNMF => interval={}-M={}-S={}-it={}-rand={}-ID={} already done.".format(str(args.n_inter), str(args.n_mic), str(args.n_speaker), str(args.n_iteration), str(args.id)))
+        print("alpha_ICA => interval={}-M={}-S={}-it={}-rand={}-ID={} already done.".format(str(args.n_inter), str(args.n_mic), str(args.n_speaker), str(args.n_iteration), str(args.id)))
         pass
     else:
-        separater = alpha_IVA(n_source=args.n_speaker,
+        size = []
+        for n in range(args.n_speaker):
+            tmp_name = os.path.join(DIR_PATH, "audio-N={}-seed={}.wav".format(n, args.id))
+            tmp_wav, fs = sf.read(tmp_name)
+            size.append(tmp_wav.shape[0])
+
+        sig_size = min(size)
+        for n in range(args.n_speaker):
+            tmp_name = os.path.join(DIR_PATH, "audio-N={}-seed={}.wav".format(n, args.id))
+            tmp_wav, fs = sf.read(tmp_name)
+            tmp_wav = tmp_wav[:sig_size-1].T
+            for m in range(args.n_mic):
+                tmp = librosa.core.stft(np.asfortranarray(tmp_wav[m]),
+                                        n_fft=args.n_fft,
+                                        hop_length=int(args.n_fft/4))
+                if m == 0 and n == 0:
+                    spec = np.zeros([tmp.shape[0], tmp.shape[1], args.n_mic], dtype=np.complex)
+
+                spec[:, :, m] += tmp
+
+        separater = alpha_ICA(n_source=args.n_speaker,
                                       alpha=args.alpha, DIR_PATH=DIR_PATH,
                                       beta=args.beta, xp=xp, seed=args.id)
         separater.load_spectrogram(spec)
