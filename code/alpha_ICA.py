@@ -36,7 +36,7 @@ class alpha_ICA():
         self.DIR_PATH = DIR_PATH
         self.n_source = n_source
         self.alpha = alpha # characteristic exponent
-        self.l1 = 1e-2  # l1 regularization
+        self.l1 = 1  # l1 regularization
         self.beta = beta # beta divergence
         self.method_name = "alpha_ICA"
         self.DIR_PATH = "/media/mafontai/SSD 2/data/speech_separation/wsj0/data/mix/"
@@ -62,7 +62,7 @@ class alpha_ICA():
         self.maxF = int(3000 * 2048 / 16000)
         self.minF = int(1000 * 2048 / 16000)
         _, self.n_time, self.n_mic = X_FTM.shape
-        self.X_FTM = self.xp.asarray(X_FTM, dtype=self.xp.complex)
+        self.X_FTM = self.xp.asarray(X_FTM, dtype=self.xp.complex64)
         self.n_freq = self.maxF - self.minF
 
     def save_A(self):
@@ -78,7 +78,7 @@ class alpha_ICA():
 
     def load_A(self):
         self.A_FPM = np.load(self.DIR_PATH + "A.npz")['A_FPM'][..., :self.n_mic]
-        self.A_FPM = self.xp.asarray(self.A_FPM)
+        self.A_FPM = self.xp.asarray(self.A_FPM).astype(self.xp.complex64)
 
     def compute_Lexp_est(self):
 
@@ -88,9 +88,17 @@ class alpha_ICA():
 
         c = 2 ** (1. / self.alpha)
         eps = 1e-10
+        Theta_FPM = self.A_FPM/self.xp.linalg.norm(self.A_FPM, axis=-1, keepdims=True)
 
-        ThX = self.xp.real((self.A_FPM[self.minF:self.maxF, None].conj() * self.X_FTM[self.minF:self.maxF, :, None]).sum(axis=-1))  # F x T x P
-        Chf = self.xp.exp((1j / c) * ThX).mean(axis=1) + eps  # F x P
+        batch_size = 20
+        Chf = 0
+        for pos in range(0, self.n_time, batch_size):
+            range_batch = slice(pos, min(self.n_time, pos + batch_size))
+            ThX = self.xp.real((Theta_FPM[self.minF:self.maxF, None].conj() * self.X_FTM[self.minF:self.maxF, range_batch, None]).sum(axis=-1))  # F x T x P
+            Chf += self.xp.exp((1j / c) * (ThX)).sum(axis=1) + eps  # F x P
+        # ThX = self.xp.real((Theta_FPM[self.minF:self.maxF, None].conj() * self.X_FTM[self.minF:self.maxF, 100:batch_size, None]).sum(axis=-1))  # F x T x P
+        # Chf += self.xp.exp((1j / c) * (ThX)).sum(axis=1) + eps  # F x P
+        Chf /= self.n_time
 
         self.X_FxP = self.xp.reshape(-2 * self.xp.log(self.xp.abs(Chf)), (self.n_freq * self.P)).astype(self.xp.float32)
 
@@ -103,24 +111,23 @@ class alpha_ICA():
 
 
     def init_SMs(self):
-        self.SM_P = self.xp.ones((self.P)).astype(self.xp.float)
+        self.SM_P = self.xp.ones((self.P)).astype(self.xp.float32)
 
 
     def update_SM(self):
         # N x F x T x P
         Xhat_FxP = self.Psi_FxPP @ self.SM_P
-        self.SM_P *= (self.eps + self.Psi_FxPP.T @ (self.X_FxP * Xhat_FxP ** (self.beta -2.))) /\
+        self.SM_P *= (self.eps + self.Psi_FxPP.T @ (self.X_FxP * (Xhat_FxP ** (self.beta -2.)))) /\
                      (self.eps + self.Psi_FxPP.T @ (Xhat_FxP ** (self.beta -1.)) + self.l1)
 
     def source_detection(self):
         self.SM_P /= self.SM_P.max()
         tmp_SM = self.convert_to_NumpyArray(self.xp.reshape(self.SM_P, (51, 41)))
         plt.imshow(tmp_SM)
-
-        self.peak_indices = sc.signal.find_peaks(self.convert_to_NumpyArray(self.SM_P), height=0.7, distance=30)
+        plt.savefig('{}{}-SM-{}.pdf'.format(self.save_path, self.method_name, self.filename_suffix))
+        self.peak_indices = sc.signal.find_peaks(self.convert_to_NumpyArray(self.SM_P), height=0.1, distance=10, prominence=0.2)
         self.n_source_estimated = len(self.peak_indices[0])
         print('real / estimated # of sources : {}/ {}'.format(self.n_source, self.n_source_estimated))
-
 
     def separation(self):
         self.A_FMN = self.A_FPM[:, self.peak_indices[0], :].transpose(0, 2, 1)
@@ -131,8 +138,6 @@ class alpha_ICA():
             self.Y_NFTM[..., m] = self.xp.asarray(pyroom.bss.common.projection_back(S_FTN.transpose(1, 0, 2), self.convert_to_NumpyArray(self.X_FTM[..., m]).T).conj().T[..., None] * S_FTN.transpose(2, 0, 1))
 
 
-
-
     def M_Step(self):
         self.update_SM()
 
@@ -141,7 +146,10 @@ class alpha_ICA():
         # File_sp = [os.path.join(Base_path, "s" + str(i_sp), id) for i_sp in range(1, self.n_source + 1)]
         if self.xp != np:
             SM_P = self.convert_to_NumpyArray(self.SM_P)
-        np.savez(fileName, SM_P=SM_P, alpha=self.alpha, beta=self.beta, iteration=self.n_iteration)
+        np.savez(fileName, SM_P=SM_P, alpha=self.alpha, beta=self.beta,
+                 iteration=self.n_iteration, x_size=51, y_size=41, n_source=self.n_source,
+                 n_source_estimated=self.n_source_estimated
+                 )
 
     def solve(self, n_iteration=100, save_likelihood=False, save_parameter=False, save_wav=False, save_path="./", interval_save_parameter=30):
         """
@@ -160,6 +168,7 @@ class alpha_ICA():
 
         # Initialization (Spatial Mask, Spatial Measure, NMF)
         self.n_iteration = n_iteration
+        self.save_path = save_path
         self.compute_psi()
         self.init_SMs()
         # self.save_A()
@@ -240,8 +249,8 @@ class alpha_ICA():
             sf.write(save_fileName + "-N={}.wav".format(n), separated_signal[n], 16000)
 
     def make_filename_suffix(self):
-        self.filename_suffix = "M={}-S={}-it={}-rand={}".format(self.n_mic, self.n_source, self.n_iteration, self.seed)
-
+        # self.filename_suffix = "M={}-S={}-it={}".format(self.n_mic, self.n_source, self.n_iteration)
+        self.filename_suffix = "M={}-S={}-it=200".format(self.n_mic, self.n_source)
         if hasattr(self, "file_id"):
             self.filename_suffix += "-ID={}".format(self.file_id)
         return self.filename_suffix

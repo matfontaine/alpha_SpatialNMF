@@ -66,15 +66,18 @@ if __name__ == "__main__":
     x_index = [int(xs_real.size / 4), int(3 * xs_real.size / 4), int(xs_real.size / 4), int(3 * xs_real.size / 4)]
     # xs_realpos_index = rand_.randint(1, xs_real.size-2, size=args.n_speaker).astype(int)
     # ys_realpos_index = rand_.randint(1, ys_real.size-2, size=args.n_speaker).astype(int)
-
+    nb_mix = 5
     for id in progressbar.progressbar(range(args.seed)):
-        if id == 30:
-            continue
         rand_ = np.random.RandomState(id)
-        src_id = rand_.randint(0, len(Name_file) - 1., size=args.n_speaker).astype(int)
+        src_id = rand_.randint(0, len(Name_file) - 1., size=(args.n_speaker, nb_mix)).astype(int)
         for n in range(len(src_id)):
-            filename = Name_file[src_id[n]]
-            wav, fs = sf.read(filename)
+            for i_mix in range(nb_mix):
+                filename = Name_file[src_id[n, i_mix]]
+                tmp_wav, fs = sf.read(filename)
+                if i_mix == 0:
+                    wav = tmp_wav.squeeze()
+                else:
+                    wav = np.concatenate((wav, tmp_wav.squeeze()), axis=0)
             sig_room = xp.zeros((len(wav), args.n_mic)).astype(float)
             if args.gpu >= 0:
                 wav = xp.asarray(wav)
